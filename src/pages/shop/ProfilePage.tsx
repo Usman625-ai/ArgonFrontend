@@ -1,7 +1,7 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { User, Mail, Phone, Lock, MapPin, Plus, Pencil, Trash2, Camera, Eye, EyeOff, Shield, Loader2 } from 'lucide-react';
+import { User, Mail, Phone, Lock, MapPin, Plus, Pencil, Trash2, Camera, Eye, EyeOff, Shield, Loader2, KeyRound } from 'lucide-react';
 import api from '../../lib/api';
 import type { User as UserType, Address, ApiResponse } from '../../types';
 import { getInitials } from '../../lib/utils';
@@ -25,7 +25,25 @@ export default function ProfilePage() {
   const [profileForm, setProfileForm] = useState({ name: user?.name || '', contactNumber: user?.contactNumber || '', profileImage: user?.profileImage || '' });
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [showPasswords, setShowPasswords] = useState({ current: false, new: false, confirm: false });
+  const [passwordStep, setPasswordStep] = useState<'form' | 'otp'>('form');
+  const [otp, setOtp] = useState('');
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [otpCooldown, setOtpCooldown] = useState(0);
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [addrForm, setAddrForm] = useState({ fullName: '', addressLine1: '', city: '', state: '', pincode: '', country: 'Pakistan', phoneNumber: '', defaultAddress: false });
+
+  const startCooldown = (seconds: number) => {
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    setOtpCooldown(seconds);
+    cooldownRef.current = setInterval(() => {
+      setOtpCooldown((s) => {
+        if (s <= 1) { if (cooldownRef.current) clearInterval(cooldownRef.current); return 0; }
+        return s - 1;
+      });
+    }, 1000);
+  };
+  useEffect(() => () => { if (cooldownRef.current) clearInterval(cooldownRef.current); }, []);
 
   const loadProfile = useCallback(async () => {
     try {
@@ -58,19 +76,64 @@ export default function ProfilePage() {
     } finally { setSavingProfile(false); }
   };
 
-  const changePassword = async () => {
+  const closePasswordModal = () => {
+    setShowPasswordModal(false);
+    setPasswordStep('form');
+    setOtp('');
+    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    setOtpCooldown(0);
+  };
+
+  // Step 1: validate the form, verify current password server-side, and email a 6-digit OTP.
+  const requestPasswordOtp = async () => {
     if (!passwordForm.currentPassword || !passwordForm.newPassword) { toast.error('Please fill all password fields'); return; }
-    if (passwordForm.newPassword.length < 6) { toast.error('Password must be at least 6 characters'); return; }
+    if (passwordForm.newPassword.length < 8) { toast.error('Password must be at least 8 characters'); return; }
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(passwordForm.newPassword)) { toast.error('Password must include uppercase, lowercase and a digit'); return; }
     if (passwordForm.newPassword !== passwordForm.confirmPassword) { toast.error('Passwords do not match'); return; }
+    if (passwordForm.currentPassword === passwordForm.newPassword) { toast.error('New password must be different from current password'); return; }
+
+    setSendingOtp(true);
     try {
-      await api.put('/api/customer/profile', { ...profileForm, currentPassword: passwordForm.currentPassword, newPassword: passwordForm.newPassword });
+      await api.post('/api/auth/change-password/request-otp', { currentPassword: passwordForm.currentPassword });
+      toast.success('OTP sent to your email');
+      setPasswordStep('otp');
+      startCooldown(60);
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { error?: string } } };
+      toast.error(e.response?.data?.error || 'Failed to send OTP');
+    } finally { setSendingOtp(false); }
+  };
+
+  const resendPasswordOtp = async () => {
+    if (otpCooldown > 0) return;
+    setSendingOtp(true);
+    try {
+      await api.post('/api/auth/change-password/request-otp', { currentPassword: passwordForm.currentPassword });
+      toast.success('OTP resent to your email');
+      startCooldown(60);
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { error?: string } } };
+      toast.error(e.response?.data?.error || 'Failed to resend OTP');
+    } finally { setSendingOtp(false); }
+  };
+
+  // Step 2: submit current password + new password + the OTP.
+  const confirmChangePassword = async () => {
+    if (!/^\d{6}$/.test(otp)) { toast.error('Enter the 6-digit OTP sent to your email'); return; }
+    setVerifyingOtp(true);
+    try {
+      await api.post('/api/auth/change-password', {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+        otp,
+      });
       toast.success('Password changed successfully');
-      setShowPasswordModal(false);
-      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      closePasswordModal();
     } catch (err: unknown) {
       const e = err as { response?: { data?: { error?: string } } };
       toast.error(e.response?.data?.error || 'Failed to change password');
-    }
+    } finally { setVerifyingOtp(false); }
   };
 
   const resetAddrForm = () => setAddrForm({ fullName: '', addressLine1: '', city: '', state: '', pincode: '', country: 'Pakistan', phoneNumber: '', defaultAddress: false });
@@ -163,7 +226,7 @@ export default function ProfilePage() {
                 {profile?.active ? <Badge variant="success">Active</Badge> : <Badge variant="destructive">Inactive</Badge>}
               </div>
             </div>
-            <Button variant="outline" onClick={() => setShowPasswordModal(true)}><Lock className="h-4 w-4" /> Change Password</Button>
+            <Button variant="outline" onClick={() => { setPasswordStep('form'); setShowPasswordModal(true); }}><Lock className="h-4 w-4" /> Change Password</Button>
           </CardContent>
         </Card>
       </motion.div>
@@ -209,8 +272,14 @@ export default function ProfilePage() {
       </div>
       </div>
 
-      {/* Password Modal */}
-      <Modal open={showPasswordModal} onClose={() => setShowPasswordModal(false)} title="Change Password" description="Enter your current password and a new one" footer={<><Button variant="outline" onClick={() => setShowPasswordModal(false)}>Cancel</Button><Button onClick={changePassword}><Shield className="h-4 w-4" /> Update Password</Button></>}>
+      {/* Password Modal — Step 1: enter current + new password, request OTP */}
+      <Modal
+        open={showPasswordModal && passwordStep === 'form'}
+        onClose={closePasswordModal}
+        title="Change Password"
+        description="Enter your current password and a new one. We'll email you a code to confirm."
+        footer={<><Button variant="outline" onClick={closePasswordModal}>Cancel</Button><Button onClick={requestPasswordOtp} loading={sendingOtp}><Shield className="h-4 w-4" /> Send OTP</Button></>}
+      >
         <div className="space-y-4">
           <Field label="Current Password" required>
             <div className="relative">
@@ -225,6 +294,7 @@ export default function ProfilePage() {
               <Input type={showPasswords.new ? 'text' : 'password'} className="pl-10 pr-10" placeholder="••••••••" value={passwordForm.newPassword} onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} />
               <button type="button" onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">{showPasswords.new ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>
             </div>
+            <p className="mt-1.5 text-xs text-muted-foreground">At least 8 characters, with uppercase, lowercase and a digit</p>
           </Field>
           <Field label="Confirm New Password" required>
             <div className="relative">
@@ -233,6 +303,36 @@ export default function ProfilePage() {
               <button type="button" onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">{showPasswords.confirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>
             </div>
           </Field>
+        </div>
+      </Modal>
+
+      {/* Password Modal — Step 2: enter the OTP that was emailed */}
+      <Modal
+        open={showPasswordModal && passwordStep === 'otp'}
+        onClose={closePasswordModal}
+        title="Enter Verification Code"
+        description={`We've sent a 6-digit code to ${profile?.email || 'your email'}`}
+        footer={<><Button variant="outline" onClick={() => setPasswordStep('form')}>Back</Button><Button onClick={confirmChangePassword} loading={verifyingOtp}><KeyRound className="h-4 w-4" /> Verify & Update</Button></>}
+      >
+        <div className="space-y-4">
+          <Field label="6-Digit OTP" required>
+            <Input
+              inputMode="numeric"
+              maxLength={6}
+              placeholder="123456"
+              className="text-center text-lg tracking-[0.5em]"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+            />
+          </Field>
+          <button
+            type="button"
+            onClick={resendPasswordOtp}
+            disabled={otpCooldown > 0 || sendingOtp}
+            className="text-sm font-medium text-primary transition-colors hover:text-primary-600 disabled:cursor-not-allowed disabled:text-muted-foreground"
+          >
+            {otpCooldown > 0 ? `Resend OTP in ${otpCooldown}s` : 'Resend OTP'}
+          </button>
         </div>
       </Modal>
 
@@ -252,4 +352,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
 
