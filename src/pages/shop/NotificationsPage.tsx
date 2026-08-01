@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { Bell, CheckCheck, ShoppingBag, CreditCard, Info, Star, PackageX, XCircle, CheckCircle2 } from 'lucide-react';
+import { Bell, CheckCheck, ShoppingBag, CreditCard, Info, Star, PackageX, XCircle, CheckCircle2, Trash2, X } from 'lucide-react';
 import api from '../../lib/api';
 import type { Notification, NotificationType, ApiResponse, PagedResponse } from '../../types';
 import { cn, formatDateTime } from '../../lib/utils';
@@ -35,6 +35,7 @@ export default function NotificationsPage() {
   const [totalElements, setTotalElements] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const [marking, setMarking] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   const loadNotifications = useCallback(async () => {
     setLoading(true);
@@ -58,6 +59,31 @@ export default function NotificationsPage() {
       setUnreadCount(0);
       toast.success('All notifications marked as read');
     } catch { toast.error('Failed to mark notifications as read'); } finally { setMarking(false); }
+  };
+
+  const deleteNotification = async (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    const wasUnread = notifications.find((n) => n.id === id && !n.read);
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    if (wasUnread) setUnreadCount((c) => Math.max(0, c - 1));
+    try {
+      await api.delete(`/api/customer/notifications/${id}`);
+    } catch {
+      toast.error('Failed to delete notification');
+      loadNotifications();
+    }
+  };
+
+  const clearAll = async () => {
+    setClearing(true);
+    try {
+      await api.delete('/api/customer/notifications/clear-all');
+      setNotifications([]);
+      setUnreadCount(0);
+      toast.success('All notifications cleared');
+    } catch {
+      toast.error('Failed to clear notifications');
+    } finally { setClearing(false); }
   };
 
   const handleClick = async (notif: Notification) => {
@@ -90,7 +116,12 @@ export default function NotificationsPage() {
         title="Notifications"
         subtitle={unreadCount > 0 ? `${unreadCount} unread notification${unreadCount !== 1 ? 's' : ''}` : "You're all caught up!"}
         crumbs={[{ label: 'Notifications' }]}
-        right={unreadCount > 0 ? <Button variant="outline" onClick={markAllRead} loading={marking}><CheckCheck className="h-4 w-4" /> Mark All Read</Button> : undefined}
+        right={
+          <div className="flex items-center gap-2">
+            {unreadCount > 0 && <Button variant="outline" onClick={markAllRead} loading={marking}><CheckCheck className="h-4 w-4" /> Mark All Read</Button>}
+            {notifications.length > 0 && <Button variant="outline" onClick={clearAll} loading={clearing}><Trash2 className="h-4 w-4" /> Clear All</Button>}
+          </div>
+        }
       />
 
       <div className="mx-auto max-w-7xl space-y-6 px-4 pt-8 sm:px-6 lg:px-8">
@@ -101,12 +132,12 @@ export default function NotificationsPage() {
             const Icon = cfg.icon;
             return (
               <motion.div key={notif.id} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <Card className={cn('cursor-pointer transition-colors hover:border-primary/30', !notif.read && 'border-primary/30 bg-primary/5')} onClick={() => handleClick(notif)}>
+                <Card className={cn('group relative cursor-pointer transition-colors hover:border-primary/30', !notif.read && 'border-primary/30 bg-primary/5')} onClick={() => handleClick(notif)}>
                   <CardContent className="flex items-start gap-3 p-4">
                     <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', cfg.bg)}>
                       <Icon className={cn('h-5 w-5', cfg.color)} />
                     </div>
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 pr-6">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2">
                           <p className="font-medium">{notif.title}</p>
@@ -117,6 +148,13 @@ export default function NotificationsPage() {
                       <p className="mt-1 text-sm text-muted-foreground">{notif.message}</p>
                       <p className="mt-1.5 text-xs text-muted-foreground">{formatDateTime(notif.createdAt)}</p>
                     </div>
+                    <button
+                      onClick={(e) => deleteNotification(e, notif.id)}
+                      aria-label="Delete notification"
+                      className="absolute right-3 top-3 rounded-full p-1.5 text-muted-foreground/60 opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
                   </CardContent>
                 </Card>
               </motion.div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Moon, Sun, Menu, LogOut, ChevronDown } from 'lucide-react';
+import { Moon, Sun, Menu, LogOut, ChevronDown, UserCircle } from 'lucide-react';
 import Sidebar from './Sidebar';
 import NotificationBell from '../shared/NotificationBell';
 import { useAppDispatch, useAppSelector } from '../../store';
@@ -131,6 +131,13 @@ export default function DashboardLayout({ title, subtitle }: P) {
                       <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
                     </div>
                     <div className="p-1">
+                      <button
+                        onClick={() => navigate(user?.role === 'ADMIN' ? '/admin/profile' : '/seller/profile')}
+                        className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                      >
+                        <UserCircle className="h-4 w-4" />
+                        My Profile
+                      </button>
                       <button
                         onClick={handleLogout}
                         className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"

@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Package, ShoppingCart, FolderTree, Ticket, Settings, FileBarChart, Store, LogOut, X, ChevronLeft, Sparkles } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, FolderTree, Ticket, Settings, FileBarChart, Store, LogOut, X, ChevronLeft, Sparkles, UserCircle, Users } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { logout } from '../../store/authSlice';
 import { cn } from '../../lib/utils';
@@ -13,13 +13,17 @@ const adminNav: NavGroup[] = [
   { label: 'Overview', items: [{ to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard }] },
   { label: 'Marketplace', items: [
     { to: '/admin/sellers', label: 'Sellers', icon: Store },
+    { to: '/admin/customers', label: 'Customers', icon: Users },
     { to: '/admin/products', label: 'Products', icon: Package },
     { to: '/admin/orders', label: 'Orders', icon: ShoppingCart },
     { to: '/admin/categories', label: 'Categories', icon: FolderTree },
     { to: '/admin/coupons', label: 'Coupons', icon: Ticket },
   ] },
   { label: 'Insights', items: [{ to: '/admin/reports', label: 'Reports', icon: FileBarChart }] },
-  { label: 'System', items: [{ to: '/admin/settings', label: 'Settings', icon: Settings }] },
+  { label: 'System', items: [
+    { to: '/admin/settings', label: 'Settings', icon: Settings },
+    { to: '/admin/profile', label: 'My Profile', icon: UserCircle },
+  ] },
 ];
 
 const sellerNav: NavGroup[] = [
@@ -32,7 +36,10 @@ const sellerNav: NavGroup[] = [
     { to: '/seller/revenue', label: 'Revenue', icon: FileBarChart },
     { to: '/seller/reports', label: 'Reports', icon: FileBarChart },
   ] },
-  { label: 'System', items: [{ to: '/seller/settings', label: 'Shop Settings', icon: Settings }] },
+  { label: 'System', items: [
+    { to: '/seller/settings', label: 'Shop Settings', icon: Settings },
+    { to: '/seller/profile', label: 'My Profile', icon: UserCircle },
+  ] },
 ];
 
 export default function Sidebar({ collapsed, mobileOpen, onClose, onToggleCollapse }: P) {

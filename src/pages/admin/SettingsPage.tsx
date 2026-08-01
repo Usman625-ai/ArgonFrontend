@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import {
-  Settings, Save, Wrench, Globe, Mail, DollarSign, Loader2, AlertTriangle,
+  Settings, Save, Wrench, Globe, Mail, DollarSign, Loader2, AlertTriangle, Users, ArrowRight,
 } from 'lucide-react';
 import api from '../../lib/api';
 import type { ApiResponse } from '../../types';
@@ -12,6 +13,7 @@ import {
 import { cn } from '../../lib/utils';
 
 export default function SettingsPage() {
+  const navigate = useNavigate();
   const [maintenance, setMaintenance] = useState(false);
   const [maintenanceLoading, setMaintenanceLoading] = useState(false);
   const [settings, setSettings] = useState({ siteName: '', contactEmail: '', currencySymbol: 'PKR' });
@@ -151,6 +153,33 @@ export default function SettingsPage() {
           </div>
           <div className="mt-6 flex justify-end">
             <Button onClick={saveSettings} loading={saving}><Save className="h-4 w-4" /> Save Changes</Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Danger Zone */}
+      <Card className="border-destructive/30">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-destructive/10">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+            </div>
+            <div>
+              <CardTitle>Danger Zone</CardTitle>
+              <CardDescription>Irreversible, destructive actions</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-4 rounded-lg border border-destructive/20 bg-destructive/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <Users className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+              <div>
+                <p className="text-sm font-medium text-foreground">Manage or delete customer accounts</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">Deactivate, delete individual customers, or permanently remove every customer account (and all their orders, addresses, cart, wishlist, reviews, and notifications) from the Customers page.</p>
+              </div>
+            </div>
+            <Button variant="destructive" onClick={() => navigate('/admin/customers')} className="shrink-0">Go to Customers <ArrowRight className="h-4 w-4" /></Button>
           </div>
         </CardContent>
       </Card>

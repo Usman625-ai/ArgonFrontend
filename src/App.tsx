@@ -3,16 +3,19 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
 import { CustomerLayout, DashboardLayout, ProtectedRoute } from './components/layout';
 import { LandingPage, LoginPage, RegisterPage, UnauthorizedPage } from './pages/auth';
+import SlowLoadingOverlay from './components/shared/SlowLoadingOverlay';
 
 // Admin pages
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const SellersPage = lazy(() => import('./pages/admin/SellersPage'));
+const CustomersPage = lazy(() => import('./pages/admin/CustomersPage'));
 const AdminProductsPage = lazy(() => import('./pages/admin/ProductsPage'));
 const AdminOrdersPage = lazy(() => import('./pages/admin/OrdersPage'));
 const CategoriesPage = lazy(() => import('./pages/admin/CategoriesPage'));
 const CouponsPage = lazy(() => import('./pages/admin/CouponsPage'));
 const AdminReportsPage = lazy(() => import('./pages/admin/ReportsPage'));
 const AdminSettingsPage = lazy(() => import('./pages/admin/SettingsPage'));
+const AdminProfilePage = lazy(() => import('./pages/admin/ProfilePage'));
 
 // Seller pages
 const SellerDashboard = lazy(() => import('./pages/seller/SellerDashboard'));
@@ -21,6 +24,7 @@ const SellerOrdersPage = lazy(() => import('./pages/seller/OrdersPage'));
 const RevenuePage = lazy(() => import('./pages/seller/RevenuePage'));
 const SellerSettingsPage = lazy(() => import('./pages/seller/SettingsPage'));
 const SellerReportsPage = lazy(() => import('./pages/seller/ReportsPage'));
+const SellerProfilePage = lazy(() => import('./pages/seller/ProfilePage'));
 
 // Shop pages
 const HomePage = lazy(() => import('./pages/shop/HomePage'));
@@ -63,6 +67,7 @@ const CustomerLayoutElement = (
 export default function App() {
   return (
     <ErrorBoundary>
+      <SlowLoadingOverlay />
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
@@ -85,12 +90,14 @@ export default function App() {
             <Route index element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="sellers" element={<SellersPage />} />
+            <Route path="customers" element={<CustomersPage />} />
             <Route path="products" element={<AdminProductsPage />} />
             <Route path="orders" element={<AdminOrdersPage />} />
             <Route path="categories" element={<CategoriesPage />} />
             <Route path="coupons" element={<CouponsPage />} />
             <Route path="reports" element={<AdminReportsPage />} />
             <Route path="settings" element={<AdminSettingsPage />} />
+            <Route path="profile" element={<AdminProfilePage />} />
           </Route>
 
           {/* Seller Routes */}
@@ -102,6 +109,7 @@ export default function App() {
             <Route path="revenue" element={<RevenuePage />} />
             <Route path="settings" element={<SellerSettingsPage />} />
             <Route path="reports" element={<SellerReportsPage />} />
+            <Route path="profile" element={<SellerProfilePage />} />
           </Route>
 
           {/* Shop Routes */}

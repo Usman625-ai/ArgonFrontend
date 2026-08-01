@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, CheckCheck, ShoppingBag, CreditCard, Info, Star, PackageX, XCircle, CheckCircle2 } from 'lucide-react';
+import { Bell, CheckCheck, ShoppingBag, CreditCard, Info, Star, PackageX, XCircle, CheckCircle2, Trash2, X } from 'lucide-react';
 import api from '../../lib/api';
 import type { Notification, NotificationType, ApiResponse, PagedResponse } from '../../types';
 import { cn, formatDateTime } from '../../lib/utils';
@@ -35,11 +35,12 @@ export default function NotificationBell({ basePath, variant = 'light', classNam
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [marking, setMarking] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   const loadUnreadCount = useCallback(async () => {
     try {
-      const res = await api.get<ApiResponse<number>>(`${basePath}/notifications/unread-count`);
+      const res = await api.get<ApiResponse<number>>(`${basePath}/notifications/unread-count`, { skipLoadingIndicator: true });
       setUnreadCount(res.data.data || 0);
     } catch { /* silent - non-critical */ }
   }, [basePath]);
@@ -79,6 +80,23 @@ export default function NotificationBell({ basePath, variant = 'light', classNam
     } catch { /* silent */ } finally { setMarking(false); }
   };
 
+  const deleteNotification = async (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    const wasUnread = notifications.find((n) => n.id === id && !n.read);
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    if (wasUnread) setUnreadCount((c) => Math.max(0, c - 1));
+    try { await api.delete(`${basePath}/notifications/${id}`); } catch { /* silent */ }
+  };
+
+  const clearAll = async () => {
+    setClearing(true);
+    try {
+      await api.delete(`${basePath}/notifications/clear-all`);
+      setNotifications([]);
+      setUnreadCount(0);
+    } catch { /* silent */ } finally { setClearing(false); }
+  };
+
   const handleClickNotification = async (n: Notification) => {
     if (!n.read) {
       setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
@@ -114,11 +132,18 @@ export default function NotificationBell({ basePath, variant = 'light', classNam
           >
             <div className="flex items-center justify-between border-b border-border/70 px-4 py-3">
               <p className="text-sm font-semibold">Notifications</p>
-              {unreadCount > 0 && (
-                <button onClick={markAllRead} disabled={marking} className="flex items-center gap-1 text-xs font-medium text-primary hover:underline disabled:opacity-50">
-                  <CheckCheck className="h-3.5 w-3.5" /> Mark all read
-                </button>
-              )}
+              <div className="flex items-center gap-3">
+                {unreadCount > 0 && (
+                  <button onClick={markAllRead} disabled={marking} className="flex items-center gap-1 text-xs font-medium text-primary hover:underline disabled:opacity-50">
+                    <CheckCheck className="h-3.5 w-3.5" /> Mark all read
+                  </button>
+                )}
+                {notifications.length > 0 && (
+                  <button onClick={clearAll} disabled={clearing} className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-destructive hover:underline disabled:opacity-50">
+                    <Trash2 className="h-3.5 w-3.5" /> Clear all
+                  </button>
+                )}
+              </div>
             </div>
             <div className="max-h-96 overflow-y-auto scrollbar-thin">
               {loading ? (
@@ -133,13 +158,15 @@ export default function NotificationBell({ basePath, variant = 'light', classNam
                   const cfg = typeConfig[n.type] || typeConfig.GENERAL;
                   const Icon = cfg.icon;
                   return (
-                    <button
+                    <div
                       key={n.id}
+                      role="button"
+                      tabIndex={0}
                       onClick={() => handleClickNotification(n)}
-                      className={cn('flex w-full items-start gap-3 border-b border-border/50 px-4 py-3 text-left transition-colors last:border-0 hover:bg-accent', !n.read && 'bg-primary/[0.04]')}
+                      className={cn('group relative flex w-full items-start gap-3 border-b border-border/50 px-4 py-3 text-left transition-colors last:border-0 hover:bg-accent', !n.read && 'bg-primary/[0.04]')}
                     >
                       <div className={cn('mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full', cfg.bg)}><Icon className={cn('h-4 w-4', cfg.color)} /></div>
-                      <div className="min-w-0 flex-1">
+                      <div className="min-w-0 flex-1 pr-5">
                         <div className="flex items-center gap-1.5">
                           <p className="truncate text-sm font-medium">{n.title}</p>
                           {!n.read && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}
@@ -147,7 +174,14 @@ export default function NotificationBell({ basePath, variant = 'light', classNam
                         <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{n.message}</p>
                         <p className="mt-1 text-[0.7rem] text-muted-foreground/70">{formatDateTime(n.createdAt)}</p>
                       </div>
-                    </button>
+                      <button
+                        onClick={(e) => deleteNotification(e, n.id)}
+                        aria-label="Delete notification"
+                        className="absolute right-2 top-2 rounded-full p-1 text-muted-foreground/60 opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   );
                 })
               )}

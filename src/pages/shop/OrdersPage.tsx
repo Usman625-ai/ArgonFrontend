@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { Package, ChevronDown, ChevronUp, Truck, MapPin, X, Clock, CheckCircle, XCircle, CreditCard, ClipboardList } from 'lucide-react';
+import { Package, ChevronDown, ChevronUp, Truck, MapPin, X, Clock, CheckCircle, XCircle, CreditCard, ClipboardList, CalendarClock, Repeat } from 'lucide-react';
 import api from '../../lib/api';
 import type { Order, ApiResponse, PagedResponse, OrderStatus } from '../../types';
 import { cn, formatPrice, formatDateTime } from '../../lib/utils';
@@ -48,6 +48,7 @@ export default function OrdersPage() {
   const [cancelOrder, setCancelOrder] = useState<Order | null>(null);
   const [cancelReason, setCancelReason] = useState('');
   const [cancelling, setCancelling] = useState(false);
+  const [reorderingId, setReorderingId] = useState<number | null>(null);
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
@@ -82,6 +83,29 @@ export default function OrdersPage() {
   const getTrackStepIndex = (status: OrderStatus) => {
     if (status === 'CANCELLED') return -1;
     return trackSteps.findIndex((s) => s.status === status);
+  };
+
+  const handleReorder = async (order: Order) => {
+    setReorderingId(order.id);
+    try {
+      let added = 0;
+      for (const item of order.orderItems) {
+        try {
+          await api.post('/api/customer/cart', { productId: item.productId, quantity: item.quantity });
+          added++;
+        } catch { /* skip items that are out of stock or unavailable */ }
+      }
+      if (added === 0) toast.error('None of these items are available right now');
+      else if (added < order.orderItems.length) toast.success(`Added ${added} of ${order.orderItems.length} items to cart`);
+      else toast.success('All items added to cart');
+      if (added > 0) navigate('/shop/cart');
+    } finally { setReorderingId(null); }
+  };
+
+  const daysUntil = (dateStr?: string) => {
+    if (!dateStr) return null;
+    const diffMs = new Date(dateStr).getTime() - Date.now();
+    return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
   };
 
   return (
@@ -186,6 +210,21 @@ export default function OrdersPage() {
                                       })}
                                     </div>
                                     {order.trackingNumber && <p className="mt-3 text-center text-xs text-muted-foreground">Tracking #: <span className="font-medium text-foreground">{order.trackingNumber}</span></p>}
+                                    {order.orderStatus !== 'PENDING' && order.estimatedDeliveryDate && order.orderStatus !== 'DELIVERED' && (() => {
+                                      const daysLeft = daysUntil(order.estimatedDeliveryDate);
+                                      return (
+                                        <div className="mt-3 flex items-center justify-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-2.5 text-sm text-foreground">
+                                          <CalendarClock className="h-4 w-4 text-primary" />
+                                          <span>
+                                            Estimated delivery: <span className="font-medium">{formatDateTime(order.estimatedDeliveryDate)}</span>
+                                            {daysLeft !== null && daysLeft >= 0 && <span className="text-muted-foreground"> ({daysLeft === 0 ? 'today' : `in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`})</span>}
+                                          </span>
+                                        </div>
+                                      );
+                                    })()}
+                                    {order.orderStatus === 'DELIVERED' && order.deliveredAt && (
+                                      <p className="mt-3 text-center text-xs text-success">Delivered on {formatDateTime(order.deliveredAt)}</p>
+                                    )}
                                   </div>
                                 ) : (
                                   <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive"><XCircle className="h-4 w-4" /> This order has been cancelled{order.cancellationReason ? `: ${order.cancellationReason}` : ''}</div>
@@ -228,7 +267,14 @@ export default function OrdersPage() {
                                 </div>
 
                                 {order.notes && <p className="text-sm text-muted-foreground">Note: {order.notes}</p>}
-                                {canCancel && <Button variant="destructive" onClick={() => setCancelOrder(order)}><X className="h-4 w-4" /> Cancel Order</Button>}
+                                <div className="flex flex-wrap gap-2">
+                                  {canCancel && <Button variant="destructive" onClick={() => setCancelOrder(order)}><X className="h-4 w-4" /> Cancel Order</Button>}
+                                  {(order.orderStatus === 'DELIVERED' || order.orderStatus === 'CANCELLED') && (
+                                    <Button variant="outline" onClick={() => handleReorder(order)} loading={reorderingId === order.id}>
+                                      <Repeat className="h-4 w-4" /> Buy Again
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             </motion.div>
                           )}
