@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShoppingBag, Store, ArrowRight, Sparkles, Shield, Truck } from 'lucide-react';
+import { ShoppingBag, Store, ArrowRight, Sparkles, Shield, Truck, Compass } from 'lucide-react';
 import { useAppSelector } from '../../store';
 
 export default function LandingPage() {
@@ -26,6 +26,8 @@ export default function LandingPage() {
       <header className="mx-auto flex max-w-7xl items-center justify-between px-6 py-7">
         <span className="font-editorial text-2xl font-medium tracking-tight">Shop<span className="italic text-primary">Verse</span></span>
         <div className="hidden items-center gap-3 sm:flex">
+          <button onClick={() => navigate('/shop')} className="text-sm font-medium text-foreground/70 transition-colors hover:text-foreground">Browse as Guest</button>
+          <span className="h-4 w-px bg-border" />
           <button onClick={() => navigate('/login')} className="text-sm font-medium text-foreground/70 transition-colors hover:text-foreground">Sign in</button>
           <button onClick={() => navigate('/register')} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-600">Create account</button>
         </div>
@@ -83,7 +85,15 @@ export default function LandingPage() {
               </button>
             </div>
             <div className="divider-fade my-6" />
-            <p className="text-center text-xs leading-relaxed text-muted-foreground">By continuing, you agree to ShopVerse's Terms of Service and Privacy Policy.</p>
+            <button
+              onClick={() => navigate('/shop')}
+              className="group flex w-full items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-medium text-foreground/75 transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <Compass className="h-4 w-4" />
+              Browse as Guest
+              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+            </button>
+            <p className="mt-4 text-center text-xs leading-relaxed text-muted-foreground">By continuing, you agree to ShopVerse's Terms of Service and Privacy Policy.</p>
           </div>
         </motion.div>
       </div>

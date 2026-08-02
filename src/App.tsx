@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
 import { CustomerLayout, DashboardLayout, ProtectedRoute } from './components/layout';
 import { LandingPage, LoginPage, RegisterPage, UnauthorizedPage } from './pages/auth';
@@ -58,11 +58,9 @@ const SellerLayoutElement = (
   </ProtectedRoute>
 );
 
-const CustomerLayoutElement = (
-  <ProtectedRoute allowedRoles={['CUSTOMER']}>
-    <CustomerLayout />
-  </ProtectedRoute>
-);
+// CustomerLayout renders for everyone — browsing is public. Only specific
+// sub-routes (cart, checkout, orders, profile, wishlist, notifications) require
+// a logged-in CUSTOMER; those are wrapped individually below.
 
 export default function App() {
   return (
@@ -112,17 +110,21 @@ export default function App() {
             <Route path="profile" element={<SellerProfilePage />} />
           </Route>
 
-          {/* Shop Routes */}
-          <Route path="/shop" element={CustomerLayoutElement}>
+          {/* Shop Routes — public browsing, gated personal routes */}
+          <Route path="/shop" element={<CustomerLayout />}>
             <Route index element={<HomePage />} />
             <Route path="products" element={<ProductsPage />} />
             <Route path="product/:slug" element={<ProductDetailPage />} />
-            <Route path="cart" element={<CartPage />} />
-            <Route path="checkout" element={<CheckoutPage />} />
-            <Route path="orders" element={<OrdersPage />} />
-            <Route path="profile" element={<ProfilePage />} />
-            <Route path="wishlist" element={<WishlistPage />} />
-            <Route path="notifications" element={<NotificationsPage />} />
+
+            {/* Requires a logged-in customer */}
+            <Route element={<ProtectedRoute allowedRoles={['CUSTOMER']}><Outlet /></ProtectedRoute>}>
+              <Route path="cart" element={<CartPage />} />
+              <Route path="checkout" element={<CheckoutPage />} />
+              <Route path="orders" element={<OrdersPage />} />
+              <Route path="profile" element={<ProfilePage />} />
+              <Route path="wishlist" element={<WishlistPage />} />
+              <Route path="notifications" element={<NotificationsPage />} />
+            </Route>
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

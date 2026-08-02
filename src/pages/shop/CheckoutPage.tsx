@@ -211,12 +211,26 @@ export default function CheckoutPage() {
           <Card>
             <CardHeader><CardTitle className="flex items-center gap-2"><CreditCard className="h-5 w-5 text-primary" /> Payment Method</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              {([['CASH_ON_DELIVERY', 'Cash on Delivery', Truck], ['JAZZCASH', 'JazzCash', CreditCard]] as const).map(([val, label, Icon]) => (
-                <div key={val} className={cn('cursor-pointer rounded-lg border-2 p-4 transition-all', paymentMethod === val ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50')} onClick={() => setPaymentMethod(val)}>
+              {([['CASH_ON_DELIVERY', 'Cash on Delivery', Truck, true], ['JAZZCASH', 'JazzCash', CreditCard, false]] as const).map(([val, label, Icon, enabled]) => (
+                <div
+                  key={val}
+                  className={cn(
+                    'rounded-lg border-2 p-4 transition-all',
+                    !enabled ? 'cursor-not-allowed border-border bg-muted/30 opacity-60' : 'cursor-pointer',
+                    enabled && paymentMethod === val ? 'border-primary bg-primary/5' : enabled ? 'border-border hover:border-primary/50' : ''
+                  )}
+                  onClick={() => enabled ? setPaymentMethod(val) : toast.error("Sorry, JazzCash isn't available right now. It'll be back soon — please use Cash on Delivery for now.")}
+                >
                   <div className="flex items-center gap-3">
-                    <div className={cn('flex h-5 w-5 items-center justify-center rounded-full border-2', paymentMethod === val ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground')}>{paymentMethod === val && <Check className="h-3 w-3" />}</div>
+                    <div className={cn('flex h-5 w-5 items-center justify-center rounded-full border-2', enabled && paymentMethod === val ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground')}>{enabled && paymentMethod === val && <Check className="h-3 w-3" />}</div>
                     <Icon className="h-5 w-5 text-muted-foreground" />
-                    <div><p className="font-medium">{label}</p><p className="text-xs text-muted-foreground">{val === 'CASH_ON_DELIVERY' ? 'Pay when you receive your order' : 'Pay securely online'}</p></div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">{label}</p>
+                        {!enabled && <Badge variant="secondary" className="text-[0.65rem]">Coming Soon</Badge>}
+                      </div>
+                      <p className="text-xs text-muted-foreground">{val === 'CASH_ON_DELIVERY' ? 'Pay when you receive your order' : "Not available right now — we're working on it"}</p>
+                    </div>
                   </div>
                 </div>
               ))}

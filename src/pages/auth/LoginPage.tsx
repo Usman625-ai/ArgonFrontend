@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -23,6 +23,7 @@ export default function LoginPage(_props: P) {
   const [sp, setSp] = useState(false);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { isLoading, error } = useAppSelector((s) => s.auth);
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) });
 
@@ -36,7 +37,11 @@ export default function LoginPage(_props: P) {
         return;
       }
       toast.success('Login successful!');
-      const dest = user.role === 'ADMIN' ? '/admin/dashboard' : user.role === 'SELLER' ? '/seller/dashboard' : '/shop';
+      const from = (location.state as { from?: Location } | null)?.from;
+      const roleHome = user.role === 'ADMIN' ? '/admin/dashboard' : user.role === 'SELLER' ? '/seller/dashboard' : '/shop';
+      // Only honor "from" for customers returning to a shop page they were bounced from —
+      // an admin/seller landing back on a /shop/* protected route wouldn't make sense.
+      const dest = from && user.role === 'CUSTOMER' && from.pathname?.startsWith('/shop') ? from.pathname + (from.search || '') : roleHome;
       navigate(dest, { replace: true });
     } catch (e) {
       toast.error(e as string);
