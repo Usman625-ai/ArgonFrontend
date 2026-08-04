@@ -42,7 +42,25 @@ export default function CustomerNavbar() {
             <button onClick={() => dispatch(toggleTheme())} className="rounded-lg p-2 text-muted-foreground hover:bg-accent transition-colors">{theme === 'dark' ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}</button>
             <Link to="/shop/wishlist" className="hidden rounded-lg p-2 text-muted-foreground hover:bg-accent transition-colors sm:block"><Heart className="h-[18px] w-[18px]" /></Link>
             {isAuthenticated && <NotificationBell basePath="/api/customer" />}
-            <Link to="/shop/cart" className="relative rounded-lg p-2 text-muted-foreground hover:bg-accent transition-colors"><ShoppingCart className="h-[18px] w-[18px]" />{itemCount > 0 && <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[0.65rem] font-bold text-primary-foreground">{itemCount}</motion.span>}</Link>
+            <Link to="/shop/cart" className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-accent">
+              <motion.span animate={itemCount > 0 ? { rotate: [0, -12, 10, -6, 0] } : {}} transition={{ duration: 0.4 }} className="block">
+                <ShoppingCart className="h-[18px] w-[18px]" />
+              </motion.span>
+              <AnimatePresence>
+                {itemCount > 0 && (
+                  <motion.span
+                    key={itemCount}
+                    initial={{ scale: 0.4, opacity: 0, y: -6 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+                    className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[0.65rem] font-bold text-primary-foreground shadow-[0_0_0_2px_hsl(var(--background))]"
+                  >
+                    {itemCount}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </Link>
             {isAuthenticated ? (
               <div className="relative ml-1">
                 <button onClick={() => setUm(!um)} className="flex items-center gap-1.5 rounded-full p-1 hover:bg-accent transition-colors"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary-400 to-primary-600 text-[0.8rem] font-semibold text-primary-foreground">{getInitials(user?.name || 'U')}</div><ChevronDown className="hidden h-4 w-4 text-muted-foreground sm:block" /></button>
