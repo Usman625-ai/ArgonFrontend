@@ -50,11 +50,13 @@ function TiltCard({ children, className, max = 8, glare = true }: { children: Re
       ref={ref}
       onMouseMove={onMove}
       onMouseLeave={onLeave}
+      whileTap={{ scale: 0.96, rotateX: -3, rotateY: 3 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 22 }}
       style={{ rotateX: rx, rotateY: ry, transformPerspective: 900 }}
       className={className}
     >
       {children}
-      {glare && <motion.div aria-hidden style={glareStyle} className="pointer-events-none absolute inset-0 rounded-[inherit] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />}
+      {glare && <motion.div aria-hidden style={glareStyle} className="pointer-events-none absolute inset-0 rounded-[inherit] opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-active:opacity-100" />}
     </motion.div>
   );
 }
@@ -213,7 +215,7 @@ export default function HomePage() {
               >
                 <TiltCard className="group relative h-full" max={10}>
                   <Link to={b.href} className={`relative flex h-full min-h-[9rem] flex-col justify-end overflow-hidden rounded-lg bg-gradient-to-br ${b.tone} p-5 text-white`}>
-                    <div className="pointer-events-none absolute inset-0 opacity-[0.06] transition-opacity group-hover:opacity-[0.1]" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
+                    <div className="pointer-events-none absolute inset-0 opacity-[0.06] transition-opacity group-hover:opacity-[0.1] group-active:opacity-[0.1]" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
                     <motion.div
                       aria-hidden
                       animate={{ scale: [1, 1.15, 1], opacity: [0.15, 0.25, 0.15] }}
@@ -222,7 +224,13 @@ export default function HomePage() {
                     />
                     <p className="relative font-editorial text-xl italic">{b.title}</p>
                     <p className="relative text-sm text-white/60">{b.sub}</p>
-                    <ArrowRight className="absolute right-5 top-5 h-4 w-4 text-white/50 transition-transform group-hover:translate-x-1" />
+                    <motion.span
+                      className="absolute right-5 top-5 text-white/50"
+                      animate={{ x: [0, 4, 0] }}
+                      transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut', delay: i * 0.3 }}
+                    >
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1 group-active:translate-x-1" />
+                    </motion.span>
                   </Link>
                 </TiltCard>
               </motion.div>
@@ -283,7 +291,7 @@ export default function HomePage() {
                   <Link to={`/shop/products?categoryId=${cat.id}`} className="block h-full">
                     <div className="relative aspect-[4/5] overflow-hidden rounded-lg border border-border/60 bg-card">
                       {cat.imageUrl ? (
-                        <SmartImage src={cat.imageUrl} alt={cat.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" fallbackIcon={<Package className="h-10 w-10 text-primary/40" />} />
+                        <SmartImage src={cat.imageUrl} alt={cat.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110 group-active:scale-110" fallbackIcon={<Package className="h-10 w-10 text-primary/40" />} />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-secondary/40 to-secondary/10">
                           <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: i * 0.2 }}>
@@ -292,10 +300,10 @@ export default function HomePage() {
                         </div>
                       )}
                       <div className={`absolute inset-0 ${cardGradient}`} />
-                      <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+                      <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full group-active:translate-x-full" />
                       <div className="absolute inset-x-0 bottom-0 p-3">
                         <p className="truncate text-sm font-medium text-white">{cat.name}</p>
-                        <p className="mt-0.5 flex translate-y-1 items-center gap-1 text-[11px] text-primary-300 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">Shop now <ArrowRight className="h-2.5 w-2.5" /></p>
+                        <p className="mt-0.5 flex translate-y-1 items-center gap-1 text-[11px] text-primary-300 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-active:translate-y-0 group-active:opacity-100">Shop now <ArrowRight className="h-2.5 w-2.5" /></p>
                       </div>
                     </div>
                   </Link>
@@ -359,7 +367,7 @@ export default function HomePage() {
             <motion.h2 initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.08 }} className="mt-3 font-editorial text-3xl font-normal italic tracking-tight sm:text-4xl">Never miss a deal</motion.h2>
             <motion.p initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.16 }} className="mx-auto mt-2 max-w-md text-sm text-white/60">New arrivals, exclusive discounts, and seller spotlights — straight to your inbox.</motion.p>
             <motion.form initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.24 }} onSubmit={(e) => e.preventDefault()} className="mx-auto mt-6 flex max-w-md flex-col gap-2 sm:flex-row">
-              <input type="email" placeholder="you@example.com" className="h-11 flex-1 rounded-full border border-white/15 bg-white/5 px-4 text-sm text-white placeholder:text-white/40 backdrop-blur focus:outline-none focus:ring-2 focus:ring-primary-300/40" />
+              <input type="email" placeholder="mrusmanhussain101@gmail.com" className="h-11 flex-1 rounded-full border border-white/15 bg-white/5 px-4 text-sm text-white placeholder:text-white/40 backdrop-blur focus:outline-none focus:ring-2 focus:ring-primary-300/40" />
               <Button size="lg" className="bg-white text-[#1a1510] hover:bg-white/90">Subscribe</Button>
             </motion.form>
           </div>
