@@ -11,6 +11,7 @@ import { useAppDispatch, useAppSelector } from '../../store';
 import { fetchCart } from '../../store/cartSlice';
 import EmptyState from '../../components/shop/EmptyState';
 import CouponSelector, { type AppliedCoupon } from '../../components/shop/CouponSelector';
+import Confetti from '../../components/shop/Confetti';
 
 interface AddrForm {
   fullName: string; phoneNumber: string; addressLine1: string; addressLine2: string;
@@ -127,21 +128,51 @@ export default function CheckoutPage() {
     return (
       <div className="flex min-h-[60vh] items-center justify-center pb-8">
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="max-w-md text-center">
-          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.1, type: 'spring' }} className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-success/10 text-success"><Check className="h-10 w-10" /></motion.div>
-          <h1 className="mt-6 font-editorial text-3xl font-normal tracking-tight">Order Placed Successfully!</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Your order{successOrder.length > 1 ? 's have' : ' has'} been placed.</p>
+          <div className="relative mx-auto flex h-20 w-20 items-center justify-center">
+            <Confetti count={30} />
+            <motion.span
+              initial={{ scale: 0.5, opacity: 0.8 }}
+              animate={{ scale: [0.5, 1.8], opacity: [0.5, 0] }}
+              transition={{ duration: 0.9, delay: 0.15, ease: 'easeOut' }}
+              className="absolute inset-0 rounded-full bg-success/30"
+            />
+            <motion.div
+              initial={{ scale: 0, rotate: -20 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.1, type: 'spring', stiffness: 260, damping: 15 }}
+              className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full bg-success/10 text-success"
+            >
+              <Check className="h-10 w-10" />
+            </motion.div>
+          </div>
+          <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.4 }} className="mt-6 font-editorial text-3xl font-normal tracking-tight">
+            Order Placed Successfully!
+          </motion.h1>
+          <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.38, duration: 0.4 }} className="mt-2 text-sm text-muted-foreground">
+            Your order{successOrder.length > 1 ? 's have' : ' has'} been placed.
+          </motion.p>
           <div className="mt-4 space-y-2">
-            {successOrder.map((o) => (
-              <div key={o.id} className="flex items-center justify-between rounded-lg border border-border/70 bg-card p-3 text-sm">
+            {successOrder.map((o, i) => (
+              <motion.div
+                key={o.id}
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.46 + i * 0.08, type: 'spring', stiffness: 260, damping: 22 }}
+                className="flex items-center justify-between rounded-lg border border-border/70 bg-card p-3 text-sm"
+              >
                 <span className="font-medium">Order #{o.orderNumber}</span>
                 <Badge variant={o.paymentStatus === 'PAID' ? 'success' : 'warning'}>{o.paymentStatus}</Badge>
-              </div>
+              </motion.div>
             ))}
           </div>
-          <div className="mt-6 flex gap-3">
-            <Button variant="outline" className="flex-1" onClick={() => navigate('/shop/orders')}>View Orders</Button>
-            <Button className="flex-1" onClick={() => navigate('/shop/products')}>Continue Shopping</Button>
-          </div>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.4 }} className="mt-6 flex gap-3">
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }} className="flex-1">
+              <Button variant="outline" className="w-full" onClick={() => navigate('/shop/orders')}>View Orders</Button>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }} className="flex-1">
+              <Button className="w-full" onClick={() => navigate('/shop/products')}>Continue Shopping</Button>
+            </motion.div>
+          </motion.div>
         </motion.div>
       </div>
     );

@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { Heart, ShoppingCart, Trash2, Package } from 'lucide-react';
+import { Heart, ShoppingCart, Trash2, Package, Check } from 'lucide-react';
 import api from '../../lib/api';
 import type { Product, ApiResponse, PagedResponse } from '../../types';
 import { Button, Skeleton, Badge, SmartImage } from '../../components/ui';
@@ -22,6 +22,7 @@ export default function WishlistPage() {
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const [movingIds, setMovingIds] = useState<number[]>([]);
+  const [movedIds, setMovedIds] = useState<number[]>([]);
 
   const loadWishlist = useCallback(async () => {
     setLoading(true);
@@ -49,9 +50,13 @@ export default function WishlistPage() {
     try {
       await dispatch(addToCart({ productId: product.id, quantity: 1 })).unwrap();
       await api.delete(`/api/customer/wishlist/${product.id}`);
-      setItems((prev) => prev.filter((p) => p.id !== product.id));
-      setTotalElements((prev) => prev - 1);
+      setMovedIds((p) => [...p, product.id]);
       toast.success('Moved to cart');
+      setTimeout(() => {
+        setItems((prev) => prev.filter((p) => p.id !== product.id));
+        setTotalElements((prev) => prev - 1);
+        setMovedIds((p) => p.filter((id) => id !== product.id));
+      }, 550);
     } catch (err) { toast.error(err as string); } finally { setMovingIds((p) => p.filter((id) => id !== product.id)); }
   };
 
@@ -66,12 +71,26 @@ export default function WishlistPage() {
       />
 
       <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
-        {loading ? (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-64 w-full rounded-xl" />)}</div>
-        ) : items.length === 0 ? (
-          <EmptyState icon={Heart} title="Your wishlist is empty" description="Save items you love to your wishlist for later." actionLabel="Browse Products" onAction={() => navigate('/shop/products')} />
-        ) : (
-          <>
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="overflow-hidden rounded-lg border border-border/70 bg-card">
+                  <Skeleton className="aspect-square w-full rounded-none" />
+                  <div className="space-y-2 p-3">
+                    <Skeleton className="h-3 w-1/3" />
+                    <Skeleton className="h-4 w-4/5" />
+                    <Skeleton className="mt-2 h-8 w-full rounded-lg" />
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          ) : items.length === 0 ? (
+            <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
+              <EmptyState icon={Heart} title="Your wishlist is empty" description="Save items you love to your wishlist for later." actionLabel="Browse Products" onAction={() => navigate('/shop/products')} />
+            </motion.div>
+          ) : (
+            <motion.div key="content" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               <AnimatePresence>
                 {items.map((product, i) => {
@@ -81,6 +100,7 @@ export default function WishlistPage() {
                   const discount = getDiscountPercentage(product.price, product.discountedPrice);
                   const outOfStock = product.stockQuantity <= 0;
                   const isMoving = movingIds.includes(product.id);
+                  const isMoved = movedIds.includes(product.id);
                   return (
                     <motion.div
                       key={product.id}
@@ -91,7 +111,22 @@ export default function WishlistPage() {
                       whileHover={{ y: -4 }}
                       transition={{ delay: Math.min(i * 0.03, 0.3), type: 'spring', stiffness: 260, damping: 22 }}
                     >
-                      <div className="group flex h-full flex-col overflow-hidden rounded-lg border border-border/70 bg-card shadow-luxury transition-shadow duration-300 hover:shadow-luxury-lg">
+                      <div className="group relative flex h-full flex-col overflow-hidden rounded-lg border border-border/70 bg-card shadow-luxury transition-shadow duration-300 hover:shadow-luxury-lg">
+                        <AnimatePresence>
+                          {isMoved && (
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-success/95 text-success-foreground backdrop-blur-sm"
+                            >
+                              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 400, damping: 16 }} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
+                                <Check className="h-5 w-5" />
+                              </motion.div>
+                              <p className="text-xs font-medium">Moved to cart!</p>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                         <button onClick={() => navigate(`/shop/product/${product.slug}`)} className="relative aspect-square overflow-hidden bg-muted">
                           {image ? <SmartImage src={image} alt={product.name} className="transition-transform duration-500 group-hover:scale-110" fallbackIcon={<Package className="h-10 w-10" />} /> : <div className="flex h-full w-full items-center justify-center text-muted-foreground"><Package className="h-10 w-10" /></div>}
                           {discount > 0 && <Badge variant="destructive" className="absolute left-2 top-2">-{discount}%</Badge>}
@@ -112,7 +147,9 @@ export default function WishlistPage() {
                             <div><span className="text-base font-semibold text-primary">{formatPrice(effPrice)}</span>{discount > 0 && <span className="ml-1 text-xs text-muted-foreground line-through">{formatPrice(product.price)}</span>}</div>
                           </div>
                           <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:gap-2">
-                            <Button size="sm" className="w-full sm:flex-1" onClick={() => moveToCart(product)} disabled={outOfStock || isMoving} loading={isMoving}><ShoppingCart className="h-3.5 w-3.5" /> <span className="truncate">{isMoving ? 'Moving...' : 'Move to Cart'}</span></Button>
+                            <motion.div whileTap={{ scale: 0.95 }} className="w-full sm:flex-1">
+                              <Button size="sm" className="w-full" onClick={() => moveToCart(product)} disabled={outOfStock || isMoving || isMoved} loading={isMoving}><ShoppingCart className="h-3.5 w-3.5" /> <span className="truncate">{isMoving ? 'Moving...' : 'Move to Cart'}</span></Button>
+                            </motion.div>
                             <Button size="sm" variant="outline" className="sm:hidden" onClick={() => removeFromWishlist(product.id)} title="Remove"><Trash2 className="h-3.5 w-3.5" /></Button>
                           </div>
                         </div>
@@ -124,9 +161,11 @@ export default function WishlistPage() {
             </div>
 
             {totalPages > 1 && <div className="mt-6"><Pagination currentPage={page + 1} totalPages={totalPages} onPageChange={(p) => setPage(p - 1)} /></div>}
-          </>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
 }
+

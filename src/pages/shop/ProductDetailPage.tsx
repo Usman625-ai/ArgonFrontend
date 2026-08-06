@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { ShoppingCart, Heart, Minus, Plus, Package, Truck, Shield, RotateCcw, ChevronLeft, MessageSquare } from 'lucide-react';
+import { ShoppingCart, Heart, Minus, Plus, Package, Truck, Shield, RotateCcw, ChevronLeft, MessageSquare, Check } from 'lucide-react';
 import api from '../../lib/api';
 import type { Product, Review, ApiResponse, PagedResponse } from '../../types';
 import { cn, formatPrice, formatDate, getEffectivePrice, getDiscountPercentage, getProductImages, truncate } from '../../lib/utils';
@@ -29,6 +29,7 @@ export default function ProductDetailPage() {
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [wished, setWished] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [relatedLoading, setRelatedLoading] = useState(true);
@@ -106,11 +107,15 @@ export default function ProductDetailPage() {
     try {
       await api.post('/api/customer/reviews', { productId: product.id, rating: reviewRating, comment: reviewComment });
       toast.success('Review submitted successfully');
-      setReviewComment('');
-      setReviewRating(5);
-      setShowReviewForm(false);
+      setReviewSubmitted(true);
       loadReviews();
       loadProduct();
+      setTimeout(() => {
+        setReviewComment('');
+        setReviewRating(5);
+        setShowReviewForm(false);
+        setReviewSubmitted(false);
+      }, 1100);
     } catch (err: unknown) {
       const e = err as { response?: { data?: { error?: string } } };
       toast.error(e.response?.data?.error || 'Failed to submit review');
@@ -226,12 +231,24 @@ export default function ProductDetailPage() {
           {/* Quantity + Actions — wraps on mobile, single row on sm+ */}
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center rounded-lg border border-border">
-              <button onClick={() => setQuantity((q) => Math.max(1, q - 1))} className="flex h-10 w-10 items-center justify-center hover:bg-accent rounded-l-lg" disabled={outOfStock}><Minus className="h-4 w-4" /></button>
-              <span className="w-12 text-center text-sm font-medium">{quantity}</span>
-              <button onClick={() => setQuantity((q) => Math.min(product.stockQuantity, q + 1))} className="flex h-10 w-10 items-center justify-center hover:bg-accent rounded-r-lg" disabled={outOfStock}><Plus className="h-4 w-4" /></button>
+              <motion.button whileTap={{ scale: 0.85 }} onClick={() => setQuantity((q) => Math.max(1, q - 1))} className="flex h-10 w-10 items-center justify-center hover:bg-accent rounded-l-lg" disabled={outOfStock}><Minus className="h-4 w-4" /></motion.button>
+              <span className="relative flex w-12 items-center justify-center overflow-hidden text-sm font-medium">
+                <AnimatePresence mode="popLayout" initial={false}>
+                  <motion.span key={quantity} initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -12, opacity: 0 }} transition={{ duration: 0.15 }} className="absolute">{quantity}</motion.span>
+                </AnimatePresence>
+              </span>
+              <motion.button whileTap={{ scale: 0.85 }} onClick={() => setQuantity((q) => Math.min(product.stockQuantity, q + 1))} className="flex h-10 w-10 items-center justify-center hover:bg-accent rounded-r-lg" disabled={outOfStock}><Plus className="h-4 w-4" /></motion.button>
             </div>
-            <Button size="lg" onClick={handleAddToCart} disabled={outOfStock} className="order-3 w-full sm:order-2 sm:w-auto sm:flex-1"><ShoppingCart className="h-5 w-5" /> Add to Cart</Button>
-            <Button size="lg" variant="outline" onClick={handleWishlist} className="order-2 sm:order-3 sm:w-auto"><Heart className={cn('h-5 w-5', wished && 'fill-destructive text-destructive')} /></Button>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} className="order-3 w-full sm:order-2 sm:w-auto sm:flex-1">
+              <Button size="lg" onClick={handleAddToCart} disabled={outOfStock} className="w-full"><ShoppingCart className="h-5 w-5" /> Add to Cart</Button>
+            </motion.div>
+            <motion.div whileTap={{ scale: 0.9 }} className="order-2 sm:order-3 sm:w-auto">
+              <Button size="lg" variant="outline" onClick={handleWishlist} className="sm:w-auto">
+                <motion.span animate={wished ? { scale: [1, 1.4, 1] } : { scale: 1 }} transition={{ duration: 0.35 }}>
+                  <Heart className={cn('h-5 w-5 transition-colors', wished && 'fill-destructive text-destructive')} />
+                </motion.span>
+              </Button>
+            </motion.div>
           </div>
 
           {/* Trust badges */}
@@ -276,55 +293,80 @@ export default function ProductDetailPage() {
           )}
         </div>
 
-        {showReviewForm && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mb-6">
-            <Card>
-              <CardContent className="pt-6 space-y-4">
-                <Field label="Your Rating">
-                  <StarRating rating={reviewRating} size={28} interactive onChange={setReviewRating} />
-                </Field>
-                <Field label="Your Review">
-                  <Textarea rows={4} placeholder="Share your experience with this product..." value={reviewComment} onChange={(e) => setReviewComment(e.target.value)} />
-                </Field>
-                <Button onClick={submitReview} loading={submittingReview}>Submit Review</Button>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
+        <AnimatePresence>
+          {showReviewForm && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }} className="mb-6 overflow-hidden">
+              <Card className="relative overflow-hidden">
+                <AnimatePresence>
+                  {reviewSubmitted && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-success/95 text-success-foreground backdrop-blur-sm"
+                    >
+                      <motion.div initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 380, damping: 16 }} className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
+                        <Check className="h-6 w-6" />
+                      </motion.div>
+                      <p className="text-sm font-medium">Thanks for your review!</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                <CardContent className="pt-6 space-y-4">
+                  <Field label="Your Rating">
+                    <StarRating rating={reviewRating} size={28} interactive onChange={setReviewRating} />
+                  </Field>
+                  <Field label="Your Review">
+                    <Textarea rows={4} placeholder="Share your experience with this product..." value={reviewComment} onChange={(e) => setReviewComment(e.target.value)} />
+                  </Field>
+                  <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }} className="inline-block">
+                    <Button onClick={submitReview} loading={submittingReview}>Submit Review</Button>
+                  </motion.div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {reviewsLoading ? (
-          <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-lg" />)}</div>
-        ) : reviews.length === 0 ? (
-          <EmptyState icon={MessageSquare} title="No reviews yet" description="Be the first to review this product." />
-        ) : (
-          <div className="space-y-3">
-            {reviews.map((r) => (
-              <motion.div key={r.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                <Card>
-                  <CardContent className="pt-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">{(r.userName || 'U').charAt(0).toUpperCase()}</div>
-                        <div>
-                          <p className="text-sm font-medium">{r.userName || 'Anonymous'}</p>
-                          <div className="flex items-center gap-2"><StarRating rating={r.rating} size={14} /><span className="text-xs text-muted-foreground">{formatDate(r.createdAt)}</span></div>
+        <AnimatePresence mode="wait">
+          {reviewsLoading ? (
+            <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-lg" />)}
+            </motion.div>
+          ) : reviews.length === 0 ? (
+            <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+              <EmptyState icon={MessageSquare} title="No reviews yet" description="Be the first to review this product." />
+            </motion.div>
+          ) : (
+            <motion.div key="content" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="space-y-3">
+              {reviews.map((r, i) => (
+                <motion.div key={r.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.06, 0.3), duration: 0.35, ease: [0.16, 1, 0.3, 1] }}>
+                  <Card>
+                    <CardContent className="pt-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">{(r.userName || 'U').charAt(0).toUpperCase()}</div>
+                          <div>
+                            <p className="text-sm font-medium">{r.userName || 'Anonymous'}</p>
+                            <div className="flex items-center gap-2"><StarRating rating={r.rating} size={14} /><span className="text-xs text-muted-foreground">{formatDate(r.createdAt)}</span></div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <p className="mt-3 text-sm text-muted-foreground">{r.comment}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-            {totalReviewPages > 1 && (
-              <div className="flex flex-wrap justify-center gap-2 pt-2">
-                <Button variant="outline" size="sm" disabled={reviewPage === 0} onClick={() => setReviewPage((p) => p - 1)}>Previous</Button>
-                <span className="flex items-center px-3 text-sm text-muted-foreground">Page {reviewPage + 1} of {totalReviewPages}</span>
-                <Button variant="outline" size="sm" disabled={reviewPage >= totalReviewPages - 1} onClick={() => setReviewPage((p) => p + 1)}>Next</Button>
-              </div>
-            )}
-          </div>
-        )}
+                      <p className="mt-3 text-sm text-muted-foreground">{r.comment}</p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+              {totalReviewPages > 1 && (
+                <div className="flex flex-wrap justify-center gap-2 pt-2">
+                  <Button variant="outline" size="sm" disabled={reviewPage === 0} onClick={() => setReviewPage((p) => p - 1)}>Previous</Button>
+                  <span className="flex items-center px-3 text-sm text-muted-foreground">Page {reviewPage + 1} of {totalReviewPages}</span>
+                  <Button variant="outline" size="sm" disabled={reviewPage >= totalReviewPages - 1} onClick={() => setReviewPage((p) => p + 1)}>Next</Button>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* You may also like */}
