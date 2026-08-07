@@ -64,7 +64,11 @@ export default function LoginPage(_props: P) {
                 <Input type="email" placeholder="you@example.com" className="pl-10" error={!!errors.email} {...register('email')} />
               </div>
             </Field>
-            <Field label="Password" error={errors.password?.message} required>
+            <div className="w-full">
+              <div className="mb-1.5 flex items-center justify-between">
+                <span className="text-[0.8rem] font-medium leading-none text-foreground/90 tracking-wide">Password</span>
+                <Link to="/forgot-password" className="text-xs font-medium text-primary hover:underline">Forgot password?</Link>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input type={sp ? 'text' : 'password'} placeholder="••••••••" className="pl-10 pr-10" error={!!errors.password} {...register('password')} />
@@ -72,7 +76,8 @@ export default function LoginPage(_props: P) {
                   {sp ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-            </Field>
+              {errors.password?.message && <p className="mt-1.5 text-xs text-destructive">{errors.password.message}</p>}
+            </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button type="submit" className="w-full" loading={isLoading}>
               <ShoppingBag className="mr-2 h-4 w-4" /> Login

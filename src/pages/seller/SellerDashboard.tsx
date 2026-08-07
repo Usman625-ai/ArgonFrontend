@@ -10,18 +10,20 @@ import { toast } from 'sonner';
 import api from '../../lib/api';
 import type { SellerDashboardStats, ApiResponse } from '../../types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, Skeleton, Badge } from '../../components/ui';
+import CountUp from '../../components/shared/CountUp';
 import { formatPrice, formatNumber } from '../../lib/utils';
 
 interface StatCardProps {
   title: string;
-  value: string;
+  value: number;
+  format?: (n: number) => string;
   icon: React.ReactNode;
   gradient: string;
   delay: number;
   subtitle?: string;
 }
 
-function StatCard({ title, value, icon, gradient, delay, subtitle }: StatCardProps) {
+function StatCard({ title, value, format, icon, gradient, delay, subtitle }: StatCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -33,7 +35,7 @@ function StatCard({ title, value, icon, gradient, delay, subtitle }: StatCardPro
         <CardContent className="p-5">
           <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} text-white shadow-sm`}>{icon}</div>
           <p className="mt-3.5 text-[0.7rem] font-medium uppercase tracking-wider text-muted-foreground">{title}</p>
-          <p className="mt-1 text-2xl font-bold tracking-tight text-foreground">{value}</p>
+          <p className="mt-1 text-2xl font-bold tracking-tight text-foreground"><CountUp value={value} format={format || formatNumber} duration={1000} /></p>
           {subtitle && <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>}
         </CardContent>
       </Card>
@@ -103,14 +105,14 @@ export default function SellerDashboard() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard
           title="Total Products"
-          value={formatNumber(stats.totalProducts)}
+          value={stats.totalProducts}
           icon={<Package className="h-5 w-5" />}
           gradient="from-primary-400 to-primary-700"
           delay={0}
         />
         <StatCard
           title="Total Orders"
-          value={formatNumber(stats.totalOrders)}
+          value={stats.totalOrders}
           icon={<ShoppingCart className="h-5 w-5" />}
           gradient="from-primary-500 to-primary-800"
           delay={0.05}
@@ -118,14 +120,15 @@ export default function SellerDashboard() {
         />
         <StatCard
           title="Total Revenue"
-          value={formatPrice(stats.totalRevenue)}
+          value={stats.totalRevenue}
+          format={formatPrice}
           icon={<DollarSign className="h-5 w-5" />}
           gradient="from-success to-primary-700"
           delay={0.1}
         />
         <StatCard
           title="Low Stock"
-          value={formatNumber(stats.lowStockProducts)}
+          value={stats.lowStockProducts}
           icon={<AlertTriangle className="h-5 w-5" />}
           gradient="from-warning to-primary-700"
           delay={0.15}
@@ -133,7 +136,7 @@ export default function SellerDashboard() {
         />
         <StatCard
           title="Pending Orders"
-          value={formatNumber(stats.pendingOrders)}
+          value={stats.pendingOrders}
           icon={<Clock className="h-5 w-5" />}
           gradient="from-primary-400 to-primary-900"
           delay={0.2}
@@ -218,28 +221,28 @@ export default function SellerDashboard() {
                 <ArrowUpRight className="h-4 w-4 text-success" />
                 <span>Best day this week</span>
               </div>
-              <p className="mt-2 text-lg font-semibold tracking-tight">{formatPrice(maxSale)}</p>
+              <p className="mt-2 text-lg font-semibold tracking-tight"><CountUp value={maxSale} format={formatPrice} /></p>
             </div>
             <div className="rounded-xl border border-border bg-secondary/40 p-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Package className="h-4 w-4 text-primary" />
                 <span>Active products</span>
               </div>
-              <p className="mt-2 text-lg font-semibold tracking-tight">{formatNumber(stats.totalProducts)}</p>
+              <p className="mt-2 text-lg font-semibold tracking-tight"><CountUp value={stats.totalProducts} format={formatNumber} /></p>
             </div>
             <div className="rounded-xl border border-border bg-secondary/40 p-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <ShoppingCart className="h-4 w-4 text-primary" />
                 <span>Orders to fulfill</span>
               </div>
-              <p className="mt-2 text-lg font-semibold tracking-tight">{formatNumber(stats.pendingOrders)}</p>
+              <p className="mt-2 text-lg font-semibold tracking-tight"><CountUp value={stats.pendingOrders} format={formatNumber} /></p>
             </div>
             <div className="rounded-xl border border-border bg-secondary/40 p-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <AlertTriangle className="h-4 w-4 text-warning" />
                 <span>Restock needed</span>
               </div>
-              <p className="mt-2 text-lg font-semibold tracking-tight">{formatNumber(stats.lowStockProducts)}</p>
+              <p className="mt-2 text-lg font-semibold tracking-tight"><CountUp value={stats.lowStockProducts} format={formatNumber} /></p>
             </div>
           </CardContent>
         </Card>

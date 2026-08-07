@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import api from '../../lib/api';
 import type { DashboardStats, ApiResponse } from '../../types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, Skeleton } from '../../components/ui';
+import CountUp from '../../components/shared/CountUp';
 import { formatPrice, formatNumber } from '../../lib/utils';
 
 const cardConfig = [
@@ -122,7 +123,7 @@ export default function AdminDashboard() {
                   </div>
                   <p className="mt-3.5 text-[0.7rem] font-medium uppercase tracking-wider text-muted-foreground">{c.label}</p>
                   <p className="mt-1 text-2xl font-bold tracking-tight text-foreground">
-                    {isRevenue ? formatPrice(value) : formatNumber(value)}
+                    <CountUp value={value} format={isRevenue ? formatPrice : formatNumber} duration={1000} />
                   </p>
                 </CardContent>
               </Card>
@@ -144,7 +145,7 @@ export default function AdminDashboard() {
           return (
             <motion.div key={s.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 + i * 0.03 }} className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary text-muted-foreground"><I className="h-4 w-4" /></div>
-              <div className="min-w-0"><p className="truncate text-xs text-muted-foreground">{s.label}</p><p className="text-lg font-semibold text-foreground">{formatNumber(s.value)}</p></div>
+              <div className="min-w-0"><p className="truncate text-xs text-muted-foreground">{s.label}</p><p className="text-lg font-semibold text-foreground"><CountUp value={s.value} format={formatNumber} duration={800} /></p></div>
             </motion.div>
           );
         })}

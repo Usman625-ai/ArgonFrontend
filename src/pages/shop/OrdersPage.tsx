@@ -198,13 +198,55 @@ export default function OrdersPage() {
                                         return (
                                           <div key={step.status} className="flex flex-1 flex-col items-center">
                                             <div className="flex w-full items-center">
-                                              {i > 0 && <div className={cn('h-0.5 flex-1', i <= stepIdx ? 'bg-primary' : 'bg-border')} />}
-                                              <div className={cn('flex h-9 w-9 items-center justify-center rounded-full border-2 transition-colors', completed ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground', isCurrent && 'ring-2 ring-primary/30 ring-offset-2')}>
-                                                <StepIcon className="h-4 w-4" />
+                                              {i > 0 && (
+                                                <div className="h-0.5 flex-1 overflow-hidden bg-border">
+                                                  <motion.div
+                                                    initial={{ scaleX: 0 }}
+                                                    animate={{ scaleX: i <= stepIdx ? 1 : 0 }}
+                                                    transition={{ duration: 0.5, delay: i * 0.15, ease: 'easeOut' }}
+                                                    style={{ transformOrigin: 'left' }}
+                                                    className="h-full w-full bg-primary"
+                                                  />
+                                                </div>
+                                              )}
+                                              <div className="relative">
+                                                {isCurrent && (
+                                                  <motion.span
+                                                    initial={{ scale: 0.8, opacity: 0.5 }}
+                                                    animate={{ scale: [0.8, 1.6], opacity: [0.4, 0] }}
+                                                    transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
+                                                    className="absolute inset-0 rounded-full bg-primary"
+                                                  />
+                                                )}
+                                                <motion.div
+                                                  initial={{ scale: 0 }}
+                                                  animate={{ scale: 1 }}
+                                                  transition={{ type: 'spring', stiffness: 340, damping: 18, delay: i * 0.15 }}
+                                                  className={cn('relative z-10 flex h-9 w-9 items-center justify-center rounded-full border-2 transition-colors', completed ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground', isCurrent && 'ring-2 ring-primary/30 ring-offset-2')}
+                                                >
+                                                  <StepIcon className="h-4 w-4" />
+                                                </motion.div>
                                               </div>
-                                              {i < trackSteps.length - 1 && <div className={cn('h-0.5 flex-1', i < stepIdx ? 'bg-primary' : 'bg-border')} />}
+                                              {i < trackSteps.length - 1 && (
+                                                <div className="h-0.5 flex-1 overflow-hidden bg-border">
+                                                  <motion.div
+                                                    initial={{ scaleX: 0 }}
+                                                    animate={{ scaleX: i < stepIdx ? 1 : 0 }}
+                                                    transition={{ duration: 0.5, delay: (i + 1) * 0.15, ease: 'easeOut' }}
+                                                    style={{ transformOrigin: 'left' }}
+                                                    className="h-full w-full bg-primary"
+                                                  />
+                                                </div>
+                                              )}
                                             </div>
-                                            <span className={cn('mt-1.5 text-xs', completed ? 'font-medium text-foreground' : 'text-muted-foreground')}>{step.label}</span>
+                                            <motion.span
+                                              initial={{ opacity: 0, y: 4 }}
+                                              animate={{ opacity: 1, y: 0 }}
+                                              transition={{ delay: i * 0.15 + 0.15, duration: 0.3 }}
+                                              className={cn('mt-1.5 text-xs', completed ? 'font-medium text-foreground' : 'text-muted-foreground')}
+                                            >
+                                              {step.label}
+                                            </motion.span>
                                           </div>
                                         );
                                       })}

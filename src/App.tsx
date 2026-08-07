@@ -2,7 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
 import { CustomerLayout, DashboardLayout, ProtectedRoute } from './components/layout';
-import { LandingPage, LoginPage, RegisterPage, UnauthorizedPage } from './pages/auth';
+import { LandingPage, LoginPage, RegisterPage, UnauthorizedPage, ForgotPasswordPage, ResetPasswordPage } from './pages/auth';
 import SlowLoadingOverlay from './components/shared/SlowLoadingOverlay';
 
 // Admin pages
@@ -81,6 +81,8 @@ export default function App() {
             }
           />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
           {/* Admin Routes */}

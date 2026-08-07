@@ -36,12 +36,22 @@ export default function NotificationBell({ basePath, variant = 'light', classNam
   const [loading, setLoading] = useState(false);
   const [marking, setMarking] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [justArrived, setJustArrived] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const prevCountRef = useRef(0);
+  const hasLoadedRef = useRef(false);
 
   const loadUnreadCount = useCallback(async () => {
     try {
       const res = await api.get<ApiResponse<number>>(`${basePath}/notifications/unread-count`, { skipLoadingIndicator: true });
-      setUnreadCount(res.data.data || 0);
+      const next = res.data.data || 0;
+      if (hasLoadedRef.current && next > prevCountRef.current) {
+        setJustArrived(true);
+        setTimeout(() => setJustArrived(false), 900);
+      }
+      hasLoadedRef.current = true;
+      prevCountRef.current = next;
+      setUnreadCount(next);
     } catch { /* silent - non-critical */ }
   }, [basePath]);
 
@@ -114,12 +124,27 @@ export default function NotificationBell({ basePath, variant = 'light', classNam
   return (
     <div className={cn('relative', className)} ref={ref}>
       <button onClick={handleToggle} className={btnClasses} aria-label="Notifications">
-        <Bell className="h-[18px] w-[18px]" />
-        {unreadCount > 0 && (
-          <span className="absolute right-1 top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[0.6rem] font-bold leading-none text-white ring-2 ring-background">
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
-        )}
+        <motion.span
+          animate={justArrived ? { rotate: [0, -18, 14, -10, 6, 0] } : {}}
+          transition={{ duration: 0.6 }}
+          className="block"
+        >
+          <Bell className="h-[18px] w-[18px]" />
+        </motion.span>
+        <AnimatePresence>
+          {unreadCount > 0 && (
+            <motion.span
+              key={unreadCount}
+              initial={{ scale: 0.4, opacity: 0, y: -6 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+              className="absolute right-1 top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[0.6rem] font-bold leading-none text-white ring-2 ring-background"
+            >
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </motion.span>
+          )}
+        </AnimatePresence>
       </button>
       <AnimatePresence>
         {open && (
@@ -149,41 +174,53 @@ export default function NotificationBell({ basePath, variant = 'light', classNam
               {loading ? (
                 <div className="space-y-1 p-2">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="skeleton h-16 w-full rounded-lg" />)}</div>
               ) : notifications.length === 0 ? (
-                <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
-                  <Bell className="h-8 w-8 text-muted-foreground/40" />
+                <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-2 px-4 py-10 text-center">
+                  <motion.div animate={{ rotate: [0, -8, 8, -4, 0] }} transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut', repeatDelay: 1.5 }}>
+                    <Bell className="h-8 w-8 text-muted-foreground/40" />
+                  </motion.div>
                   <p className="text-sm text-muted-foreground">You're all caught up</p>
-                </div>
+                </motion.div>
               ) : (
-                notifications.map((n) => {
-                  const cfg = typeConfig[n.type] || typeConfig.GENERAL;
-                  const Icon = cfg.icon;
-                  return (
-                    <div
-                      key={n.id}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => handleClickNotification(n)}
-                      className={cn('group relative flex w-full items-start gap-3 border-b border-border/50 px-4 py-3 text-left transition-colors last:border-0 hover:bg-accent', !n.read && 'bg-primary/[0.04]')}
-                    >
-                      <div className={cn('mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full', cfg.bg)}><Icon className={cn('h-4 w-4', cfg.color)} /></div>
-                      <div className="min-w-0 flex-1 pr-5">
-                        <div className="flex items-center gap-1.5">
-                          <p className="truncate text-sm font-medium">{n.title}</p>
-                          {!n.read && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}
-                        </div>
-                        <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{n.message}</p>
-                        <p className="mt-1 text-[0.7rem] text-muted-foreground/70">{formatDateTime(n.createdAt)}</p>
-                      </div>
-                      <button
-                        onClick={(e) => deleteNotification(e, n.id)}
-                        aria-label="Delete notification"
-                        className="absolute right-2 top-2 rounded-full p-1 text-muted-foreground/60 opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                <AnimatePresence initial={false}>
+                  {notifications.map((n, i) => {
+                    const cfg = typeConfig[n.type] || typeConfig.GENERAL;
+                    const Icon = cfg.icon;
+                    return (
+                      <motion.div
+                        key={n.id}
+                        layout
+                        initial={{ opacity: 0, x: 12 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 60, height: 0 }}
+                        transition={{ delay: Math.min(i * 0.04, 0.2), duration: 0.25 }}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => handleClickNotification(n)}
+                        className={cn('group relative flex w-full items-start gap-3 overflow-hidden border-b border-border/50 px-4 py-3 text-left transition-colors last:border-0 hover:bg-accent', !n.read && 'bg-primary/[0.04]')}
                       >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  );
-                })
+                        <motion.div initial={{ scale: 0.6 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 18, delay: Math.min(i * 0.04, 0.2) + 0.05 }} className={cn('mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full', cfg.bg)}>
+                          <Icon className={cn('h-4 w-4', cfg.color)} />
+                        </motion.div>
+                        <div className="min-w-0 flex-1 pr-5">
+                          <div className="flex items-center gap-1.5">
+                            <p className="truncate text-sm font-medium">{n.title}</p>
+                            {!n.read && <motion.span animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }} className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}
+                          </div>
+                          <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{n.message}</p>
+                          <p className="mt-1 text-[0.7rem] text-muted-foreground/70">{formatDateTime(n.createdAt)}</p>
+                        </div>
+                        <motion.button
+                          whileTap={{ scale: 0.8 }}
+                          onClick={(e) => deleteNotification(e, n.id)}
+                          aria-label="Delete notification"
+                          className="absolute right-2 top-2 rounded-full p-1 text-muted-foreground/60 opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </motion.button>
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
               )}
             </div>
           </motion.div>
