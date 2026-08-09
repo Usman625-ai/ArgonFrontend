@@ -41,7 +41,7 @@ export default function LandingPage() {
               Shop from <span className="italic text-primary">thousands</span> of sellers, all in one place
             </h1>
             <p className="mt-6 max-w-md text-[1.05rem] leading-relaxed text-muted-foreground">
-              Join ShopVerse as a customer to discover curated goods, or as a seller to grow your business nationwide.
+              Join Argon as a customer to discover curated goods, or as a seller to grow your business nationwide.
             </p>
 
             <div className="mt-10 space-y-5">
@@ -60,7 +60,7 @@ export default function LandingPage() {
 
         <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.15 }} className="flex justify-center lg:justify-end">
           <div className="w-full max-w-sm surface-panel rounded-2xl p-9">
-            <h2 className="text-center font-editorial text-2xl font-medium">Welcome to ShopVerse</h2>
+            <h2 className="text-center font-editorial text-2xl font-medium">Welcome to Argon</h2>
             <p className="mt-2 text-center text-sm text-muted-foreground">Choose an option to get started</p>
             <div className="mt-8 space-y-3">
               <button
@@ -93,7 +93,7 @@ export default function LandingPage() {
               Browse as Guest
               <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
             </button>
-            <p className="mt-4 text-center text-xs leading-relaxed text-muted-foreground">By continuing, you agree to ShopVerse's Terms of Service and Privacy Policy.</p>
+            <p className="mt-4 text-center text-xs leading-relaxed text-muted-foreground">By continuing, you agree to Argon's Terms of Service and Privacy Policy.</p>
           </div>
         </motion.div>
       </div>

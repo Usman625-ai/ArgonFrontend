@@ -21,6 +21,9 @@ export default defineConfig({
           redux: ['@reduxjs/toolkit', 'react-redux'],
           charts: ['recharts'],
           ui: ['framer-motion', 'sonner'],
+          // Bundles all ~47 individually-imported lucide-react icons into one
+          // chunk instead of one HTTP request per icon module.
+          icons: ['lucide-react'],
         },
       },
     },

@@ -68,7 +68,7 @@ export default function RegisterPage() {
     if (!otp || otp.length < 6) { toast.error('Please enter the 6-digit OTP'); return; }
     try {
       await dispatch(verifyEmail({ email, otp })).unwrap();
-      toast.success('Email verified! Welcome to ShopVerse.');
+      toast.success('Email verified! Welcome to Argon.');
       window.location.href = '/';
     } catch (e) {
       toast.error(e as string);
@@ -148,7 +148,7 @@ export default function RegisterPage() {
         <div className="mb-6 flex flex-col items-center gap-2 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary-400 to-primary-600 text-primary-foreground font-editorial text-xl font-medium">S</div>
           <h1 className="font-editorial text-3xl font-medium tracking-tight">Create Account</h1>
-          <p className="text-sm text-muted-foreground">Join ShopVerse today</p>
+          <p className="text-sm text-muted-foreground">Join Argon today</p>
         </div>
         <div className="surface-panel rounded-2xl p-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

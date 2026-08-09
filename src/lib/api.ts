@@ -2,7 +2,7 @@ import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'ax
 import { storage } from './utils';
 import { loadingBus } from './loadingBus';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 /** Extend axios config so callers can opt individual requests out of the slow-loading overlay. */
 declare module 'axios' {

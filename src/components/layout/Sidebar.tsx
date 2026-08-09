@@ -74,12 +74,12 @@ export default function Sidebar({ collapsed, mobileOpen, onClose, onToggleCollap
         <div className="flex h-16 shrink-0 items-center justify-between px-4">
           <div className="flex items-center gap-2.5 overflow-hidden">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-primary-400 to-primary-600 font-editorial text-base font-semibold text-primary-foreground">
-              S
+              A
             </div>
             {!collapsed && (
               <div className="leading-tight">
                 <span className="block font-editorial text-lg font-medium tracking-tight text-[#f0e9dd]">
-                  Shop<span className="italic text-primary-400">Verse</span>
+                  Argon
                 </span>
                 <span className="flex items-center gap-1 text-[0.65rem] font-medium text-primary-300">
                   <Sparkles className="h-2.5 w-2.5" />

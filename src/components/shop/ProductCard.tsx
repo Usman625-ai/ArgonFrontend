@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from 'react';
+import { memo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, type MotionStyle } from 'framer-motion';
 import { ShoppingCart, Heart, Eye, Star, Package, Check } from 'lucide-react';
@@ -50,7 +50,7 @@ function TiltCard({ children, className }: { children: ReactNode; className?: st
   );
 }
 
-export default function ProductCard({ product, layout = 'grid', index = 0 }: ProductCardProps) {
+function ProductCard({ product, layout = 'grid', index = 0 }: ProductCardProps) {
   const dispatch = useAppDispatch();
   const { isAuthenticated } = useAppSelector((s) => s.auth);
   const images = getProductImages(product);
@@ -228,4 +228,9 @@ export default function ProductCard({ product, layout = 'grid', index = 0 }: Pro
     </motion.div>
   );
 }
+
+// Grids render 12–24 of these at once (Home, Products, Wishlist, Search).
+// Memoizing keeps unrelated re-renders (filters, redux updates elsewhere)
+// from re-rendering every card in the grid.
+export default memo(ProductCard);
 

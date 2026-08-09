@@ -367,7 +367,7 @@ export default function HomePage() {
             <motion.h2 initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.08 }} className="mt-3 font-editorial text-3xl font-normal italic tracking-tight sm:text-4xl">Never miss a deal</motion.h2>
             <motion.p initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.16 }} className="mx-auto mt-2 max-w-md text-sm text-white/60">New arrivals, exclusive discounts, and seller spotlights — straight to your inbox.</motion.p>
             <motion.form initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.24 }} onSubmit={(e) => e.preventDefault()} className="mx-auto mt-6 flex max-w-md flex-col gap-2 sm:flex-row">
-              <input type="email" placeholder="mrusmanhussain101@gmail.com" className="h-11 flex-1 rounded-full border border-white/15 bg-white/5 px-4 text-sm text-white placeholder:text-white/40 backdrop-blur focus:outline-none focus:ring-2 focus:ring-primary-300/40" />
+              <input type="email" placeholder="you@example.com" className="h-11 flex-1 rounded-full border border-white/15 bg-white/5 px-4 text-sm text-white placeholder:text-white/40 backdrop-blur focus:outline-none focus:ring-2 focus:ring-primary-300/40" />
               <Button size="lg" className="bg-white text-[#1a1510] hover:bg-white/90">Subscribe</Button>
             </motion.form>
           </div>

@@ -12,7 +12,16 @@ export default function CustomerNavbar() {
   const [scrolled, setScrolled] = useState(false); const [mm, setMm] = useState(false); const [um, setUm] = useState(false); const [sq, setSq] = useState('');
   const navigate = useNavigate(); const loc = useLocation(); const dispatch = useAppDispatch();
   const { user, isAuthenticated } = useAppSelector((s) => s.auth); const { itemCount } = useAppSelector((s) => s.cart); const { theme } = useAppSelector((s) => s.ui);
-  useEffect(() => { const h = () => setScrolled(window.scrollY > 10); window.addEventListener('scroll', h); return () => window.removeEventListener('scroll', h); }, []);
+  useEffect(() => {
+    let ticking = false;
+    const h = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => { setScrolled(window.scrollY > 10); ticking = false; });
+    };
+    window.addEventListener('scroll', h, { passive: true });
+    return () => window.removeEventListener('scroll', h);
+  }, []);
   useEffect(() => { setMm(false); setUm(false); }, [loc.pathname]);
   const handleSearch = (e: React.FormEvent) => { e.preventDefault(); if (sq.trim()) navigate(`/shop/products?q=${encodeURIComponent(sq)}`); };
   const handleLogout = async () => { await dispatch(logout()); navigate('/'); };
@@ -24,7 +33,7 @@ export default function CustomerNavbar() {
           <div className="flex items-center gap-3">
             <button onClick={() => setMm(true)} className="rounded-lg p-2 hover:bg-accent lg:hidden"><Menu className="h-5 w-5" /></button>
             <Link to="/shop" className="flex items-center gap-0.5">
-              <span className="font-editorial text-[1.6rem] font-medium tracking-tight text-foreground">Shop<span className="italic text-primary">Verse</span></span>
+              <span className="font-editorial text-[1.6rem] font-medium tracking-tight text-foreground">Argon</span>
             </Link>
           </div>
           <nav className="hidden items-center gap-8 lg:flex">

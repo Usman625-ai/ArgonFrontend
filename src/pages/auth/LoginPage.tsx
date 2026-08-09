@@ -54,7 +54,7 @@ export default function LoginPage(_props: P) {
         <div className="mb-6 flex flex-col items-center gap-2 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary-400 to-primary-600 text-primary-foreground font-editorial text-xl font-medium">S</div>
           <h1 className="font-editorial text-3xl font-medium tracking-tight">Welcome Back</h1>
-          <p className="text-sm text-muted-foreground">Login to your ShopVerse account</p>
+          <p className="text-sm text-muted-foreground">Login to your Argon account</p>
         </div>
         <div className="surface-panel rounded-2xl p-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

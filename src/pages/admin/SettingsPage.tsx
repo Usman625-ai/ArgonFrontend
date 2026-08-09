@@ -135,13 +135,13 @@ export default function SettingsPage() {
             <Field label="Site Name" required>
               <div className="relative">
                 <Globe className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input placeholder="ShopVerse" value={settings.siteName} onChange={(e) => setSettings((s) => ({ ...s, siteName: e.target.value }))} className="pl-10" />
+                <Input placeholder="Argon" value={settings.siteName} onChange={(e) => setSettings((s) => ({ ...s, siteName: e.target.value }))} className="pl-10" />
               </div>
             </Field>
             <Field label="Contact Email" required>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input type="email" placeholder="support@shopverse.com" value={settings.contactEmail} onChange={(e) => setSettings((s) => ({ ...s, contactEmail: e.target.value }))} className="pl-10" />
+                <Input type="email" placeholder="support@argon.com" value={settings.contactEmail} onChange={(e) => setSettings((s) => ({ ...s, contactEmail: e.target.value }))} className="pl-10" />
               </div>
             </Field>
             <Field label="Currency Symbol">
