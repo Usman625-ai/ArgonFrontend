@@ -1,6 +1,6 @@
 import { memo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, type MotionStyle } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useScroll, type MotionStyle } from 'framer-motion';
 import { ShoppingCart, Heart, Eye, Star, Package, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Product } from '../../types';
@@ -16,12 +16,27 @@ interface ProductCardProps {
   index?: number;
 }
 
+/**
+ * Tilts the card in 3D. On desktop the cursor drives it (mousemove); on
+ * mobile/touch — where there's no cursor to track — scroll position drives
+ * the same rotateX/rotateY instead, so the card tilts through 3D space as it
+ * travels past the viewport center. Both sources are added together, so
+ * desktop still gets scroll tilt too, just with cursor tilt layered on top.
+ */
 function TiltCard({ children, className }: { children: ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const mx = useMotionValue(0.5);
   const my = useMotionValue(0.5);
-  const rx = useSpring(useTransform(my, [0, 1], [6, -6]), { stiffness: 150, damping: 18 });
-  const ry = useSpring(useTransform(mx, [0, 1], [-6, 6]), { stiffness: 150, damping: 18 });
+  const mouseRx = useSpring(useTransform(my, [0, 1], [6, -6]), { stiffness: 150, damping: 18 });
+  const mouseRy = useSpring(useTransform(mx, [0, 1], [-6, 6]), { stiffness: 150, damping: 18 });
+
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
+  const scrollRx = useSpring(useTransform(scrollYProgress, [0, 0.5, 1], [9, 0, -9]), { stiffness: 100, damping: 24 });
+  const scrollRy = useSpring(useTransform(scrollYProgress, [0, 0.5, 1], [-4, 0, 4]), { stiffness: 100, damping: 24 });
+
+  const rx = useTransform([mouseRx, scrollRx], (v) => (v as number[])[0] + (v as number[])[1]);
+  const ry = useTransform([mouseRy, scrollRy], (v) => (v as number[])[0] + (v as number[])[1]);
+
   const gx = useTransform(mx, [0, 1], ['0%', '100%']);
   const gy = useTransform(my, [0, 1], ['0%', '100%']);
   const glare: MotionStyle = { background: useTransform([gx, gy], ([x, y]) => `radial-gradient(circle at ${x} ${y}, rgba(255,255,255,0.16), transparent 45%)`) };
@@ -39,7 +54,7 @@ function TiltCard({ children, className }: { children: ReactNode; className?: st
       ref={ref}
       onMouseMove={onMove}
       onMouseLeave={onLeave}
-      whileTap={{ scale: 0.96, rotateX: -3, rotateY: 3 }}
+      whileTap={{ scale: 0.95, rotateX: -8, rotateY: 8 }}
       transition={{ type: 'spring', stiffness: 400, damping: 22 }}
       style={{ rotateX: rx, rotateY: ry, transformPerspective: 900 }}
       className={className}

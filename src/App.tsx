@@ -2,8 +2,16 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
 import { CustomerLayout, DashboardLayout, ProtectedRoute } from './components/layout';
-import { LandingPage, LoginPage, RegisterPage, UnauthorizedPage, ForgotPasswordPage, ResetPasswordPage } from './pages/auth';
+import LandingPage from './pages/auth/LandingPage';
 import SlowLoadingOverlay from './components/shared/SlowLoadingOverlay';
+
+// Auth pages — LandingPage stays eager (it's the "/" entry route for every
+// visitor), everything else is lazy so the first paint on "/" stays light.
+const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
+const UnauthorizedPage = lazy(() => import('./pages/auth/UnauthorizedPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
 
 // Admin pages
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));

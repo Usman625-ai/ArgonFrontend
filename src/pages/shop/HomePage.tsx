@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSpring, type MotionStyle } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ShoppingBag, Truck, Shield, Headphones, ArrowRight, Package, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ShoppingBag, Truck, Shield, Headphones, ArrowRight, Package, Sparkles, Zap } from 'lucide-react';
 import api from '../../lib/api';
 import type { Product, Category, ApiResponse, PagedResponse } from '../../types';
 import { SkeletonCard, Button, SmartImage } from '../../components/ui';
@@ -25,13 +25,22 @@ const features = [
 
 const cardGradient = 'bg-gradient-to-t from-[#1a120d]/95 via-[#2a1d14]/70 to-[#2a1d14]/20';
 
-/* 3D tilt that follows the cursor — used for hero tiles & category cards. */
+/* 3D tilt that follows the cursor on desktop, and scroll position on mobile/touch
+   (no cursor to track there) — used for hero tiles & category cards. */
 function TiltCard({ children, className, max = 8, glare = true }: { children: ReactNode; className?: string; max?: number; glare?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const mx = useMotionValue(0.5);
   const my = useMotionValue(0.5);
-  const rx = useSpring(useTransform(my, [0, 1], [max, -max]), { stiffness: 150, damping: 18 });
-  const ry = useSpring(useTransform(mx, [0, 1], [-max, max]), { stiffness: 150, damping: 18 });
+  const mouseRx = useSpring(useTransform(my, [0, 1], [max, -max]), { stiffness: 150, damping: 18 });
+  const mouseRy = useSpring(useTransform(mx, [0, 1], [-max, max]), { stiffness: 150, damping: 18 });
+
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
+  const scrollRx = useSpring(useTransform(scrollYProgress, [0, 0.5, 1], [max * 0.9, 0, -max * 0.9]), { stiffness: 100, damping: 24 });
+  const scrollRy = useSpring(useTransform(scrollYProgress, [0, 0.5, 1], [-max * 0.4, 0, max * 0.4]), { stiffness: 100, damping: 24 });
+
+  const rx = useTransform([mouseRx, scrollRx], (v) => (v as number[])[0] + (v as number[])[1]);
+  const ry = useTransform([mouseRy, scrollRy], (v) => (v as number[])[0] + (v as number[])[1]);
+
   const gx = useTransform(mx, [0, 1], ['0%', '100%']);
   const gy = useTransform(my, [0, 1], ['0%', '100%']);
 
@@ -50,7 +59,7 @@ function TiltCard({ children, className, max = 8, glare = true }: { children: Re
       ref={ref}
       onMouseMove={onMove}
       onMouseLeave={onLeave}
-      whileTap={{ scale: 0.96, rotateX: -3, rotateY: 3 }}
+      whileTap={{ scale: 0.94, rotateX: -max, rotateY: max }}
       transition={{ type: 'spring', stiffness: 400, damping: 22 }}
       style={{ rotateX: rx, rotateY: ry, transformPerspective: 900 }}
       className={className}
@@ -95,6 +104,117 @@ function Marquee({ children, speed = 28 }: { children: ReactNode; speed?: number
         {children}
       </motion.div>
     </div>
+  );
+}
+
+/* A single flip-clock digit — 3D-rotates in place whenever its value changes.
+   Pure CSS/transform animation, so it plays identically on mobile and desktop
+   with no cursor or gesture required. */
+function FlipDigit({ value }: { value: string }) {
+  return (
+    <div className="relative h-12 w-8 [perspective:300px] sm:h-16 sm:w-11">
+      <AnimatePresence mode="popLayout">
+        <motion.div
+          key={value}
+          initial={{ rotateX: -90, opacity: 0 }}
+          animate={{ rotateX: 0, opacity: 1 }}
+          exit={{ rotateX: 90, opacity: 0 }}
+          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute inset-0 flex items-center justify-center rounded-md bg-white/10 font-editorial text-2xl font-medium text-white [transform-style:preserve-3d] sm:text-3xl"
+        >
+          {value}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function FlipPair({ value, label }: { value: number; label: string }) {
+  const str = String(Math.max(0, value)).padStart(2, '0');
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <div className="flex gap-1">
+        <FlipDigit value={str[0]} />
+        <FlipDigit value={str[1]} />
+      </div>
+      <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-white/50">{label}</span>
+    </div>
+  );
+}
+
+/* Countdown to local midnight — resets daily, no backend required. */
+function useMidnightCountdown() {
+  const getRemaining = () => {
+    const now = new Date();
+    const end = new Date(now);
+    end.setHours(24, 0, 0, 0);
+    return Math.max(0, end.getTime() - now.getTime());
+  };
+  const [remaining, setRemaining] = useState(getRemaining);
+  useEffect(() => {
+    const t = setInterval(() => setRemaining(getRemaining()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const totalSeconds = Math.floor(remaining / 1000);
+  return {
+    hours: Math.floor(totalSeconds / 3600),
+    minutes: Math.floor((totalSeconds % 3600) / 60),
+    seconds: totalSeconds % 60,
+  };
+}
+
+function FlashSaleBand() {
+  const { hours, minutes, seconds } = useMidnightCountdown();
+
+  return (
+    <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.4 }}
+        transition={{ duration: 0.5 }}
+        className="relative overflow-hidden rounded-lg bg-gradient-to-br from-[#241812] via-[#1a120d] to-[#0f0b08] px-6 py-12 text-center text-white sm:px-16"
+      >
+        <div className="pointer-events-none absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+        <motion.div aria-hidden animate={{ x: [-20, 30, -20], opacity: [0.1, 0.2, 0.1] }} transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }} className="pointer-events-none absolute left-1/4 top-0 h-40 w-40 rounded-full bg-primary/30 blur-3xl" />
+        <motion.div aria-hidden animate={{ x: [20, -30, 20], opacity: [0.1, 0.2, 0.1] }} transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 1 }} className="pointer-events-none absolute bottom-0 right-1/4 h-48 w-48 rounded-full bg-amber-500/20 blur-3xl" />
+
+        <div className="relative">
+          <motion.span
+            initial={{ opacity: 0, y: 8 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            animate={{ scale: [1, 1.06, 1] }}
+            transition={{ scale: { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } }}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-primary-300"
+          >
+            <Zap className="h-3.5 w-3.5" /> Flash sale — today only
+          </motion.span>
+          <motion.h2 initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.08 }} className="mt-3 font-editorial text-3xl font-normal italic tracking-tight sm:text-4xl">
+            Deals reset at midnight
+          </motion.h2>
+          <motion.p initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.16 }} className="mx-auto mt-2 max-w-md text-sm text-white/60">
+            Grab today's discounted picks from verified sellers before the clock runs out.
+          </motion.p>
+
+          <motion.div initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.24 }} className="mx-auto mt-7 flex items-center justify-center gap-2 sm:gap-4">
+            <FlipPair value={hours} label="Hours" />
+            <span className="pb-4 font-editorial text-2xl text-white/30 sm:text-3xl">:</span>
+            <FlipPair value={minutes} label="Minutes" />
+            <span className="pb-4 font-editorial text-2xl text-white/30 sm:text-3xl">:</span>
+            <FlipPair value={seconds} label="Seconds" />
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.32 }} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} className="mt-8 inline-block">
+            <Link to="/shop/products?sortBy=discountedPrice,ASC">
+              <Button size="lg" variant="default" className="bg-white text-[#1a1510] hover:bg-white/90">
+                Shop the deals <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </motion.div>
+        </div>
+      </motion.div>
+    </section>
   );
 }
 
@@ -350,29 +470,9 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* Newsletter / trust band */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 0.5 }}
-          className="relative overflow-hidden rounded-lg bg-gradient-to-br from-[#241812] via-[#1a120d] to-[#0f0b08] px-6 py-12 text-center text-white sm:px-16"
-        >
-          <div className="pointer-events-none absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
-          <motion.div aria-hidden animate={{ x: [-20, 30, -20], opacity: [0.1, 0.2, 0.1] }} transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }} className="pointer-events-none absolute left-1/4 top-0 h-40 w-40 rounded-full bg-primary/30 blur-3xl" />
-          <motion.div aria-hidden animate={{ x: [20, -30, 20], opacity: [0.1, 0.2, 0.1] }} transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 1 }} className="pointer-events-none absolute bottom-0 right-1/4 h-48 w-48 rounded-full bg-amber-500/20 blur-3xl" />
-          <div className="relative">
-            <motion.span initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-primary-300"><Sparkles className="h-3.5 w-3.5" /> Stay in the loop</motion.span>
-            <motion.h2 initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.08 }} className="mt-3 font-editorial text-3xl font-normal italic tracking-tight sm:text-4xl">Never miss a deal</motion.h2>
-            <motion.p initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.16 }} className="mx-auto mt-2 max-w-md text-sm text-white/60">New arrivals, exclusive discounts, and seller spotlights — straight to your inbox.</motion.p>
-            <motion.form initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.24 }} onSubmit={(e) => e.preventDefault()} className="mx-auto mt-6 flex max-w-md flex-col gap-2 sm:flex-row">
-              <input type="email" placeholder="you@example.com" className="h-11 flex-1 rounded-full border border-white/15 bg-white/5 px-4 text-sm text-white placeholder:text-white/40 backdrop-blur focus:outline-none focus:ring-2 focus:ring-primary-300/40" />
-              <Button size="lg" className="bg-white text-[#1a1510] hover:bg-white/90">Subscribe</Button>
-            </motion.form>
-          </div>
-        </motion.div>
-      </section>
+      {/* Flash Sale — 3D flip-clock countdown, animates on its own so mobile
+          users get the same "wow" moment desktop gets from cursor effects. */}
+      <FlashSaleBand />
     </div>
   );
 }

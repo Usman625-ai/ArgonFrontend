@@ -1,6 +1,6 @@
-# ShopVerse Frontend
+# Argon Frontend
 
-Production-ready, responsive frontend for the ShopVerse multi-vendor e-commerce platform.
+Production-ready, responsive frontend for the Argon multi-vendor e-commerce platform.
 
 ## Tech Stack
 
