@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -44,14 +44,49 @@ export default function CartPage() {
   useEffect(() => { loadCart(); }, [loadCart]);
   useEffect(() => { setLocalCart(cart); }, [cart]);
 
-  const handleQuantity = async (itemId: number, quantity: number, stock: number) => {
-    if (quantity < 1) return;
-    if (quantity > stock) { toast.error('Cannot exceed available stock'); return; }
+  const pendingQty = useRef<Record<number, number>>({});
+  const debounceTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
+
+  // Cleanup any in-flight debounce timers if the user navigates away mid-click.
+  useEffect(() => () => { Object.values(debounceTimers.current).forEach(clearTimeout); }, []);
+
+  const commitQuantity = useCallback(async (itemId: number) => {
+    const quantity = pendingQty.current[itemId];
+    if (quantity === undefined) return;
     setUpdatingIds((p) => [...p, itemId]);
     try {
       await dispatch(updateCartItem({ itemId, quantity })).unwrap();
-      await dispatch(fetchCart());
-    } catch (err) { toast.error(err as string); } finally { setUpdatingIds((p) => p.filter((id) => id !== itemId)); }
+    } catch (err) {
+      toast.error(err as string);
+      dispatch(fetchCart()); // resync with the server if the update failed
+    } finally {
+      setUpdatingIds((p) => p.filter((id) => id !== itemId));
+      delete pendingQty.current[itemId];
+    }
+  }, [dispatch]);
+
+  const handleQuantity = (itemId: number, quantity: number, stock: number) => {
+    if (quantity < 1) return;
+    if (quantity > stock) { toast.error('Cannot exceed available stock'); return; }
+
+    // Update the visible cart immediately — no waiting on the network for the
+    // number or the totals to change. The API call is debounced below so
+    // rapid +/- clicks collapse into a single request instead of one per tap.
+    setLocalCart((prev) => {
+      if (!prev) return prev;
+      const idx = prev.items.findIndex((i) => i.id === itemId);
+      if (idx === -1) return prev;
+      const item = prev.items[idx];
+      const newItemTotal = item.effectivePrice * quantity;
+      const delta = newItemTotal - item.itemTotal;
+      const items = [...prev.items];
+      items[idx] = { ...item, quantity, itemTotal: newItemTotal };
+      return { ...prev, items, subtotal: prev.subtotal + delta, total: prev.total + delta };
+    });
+
+    pendingQty.current[itemId] = quantity;
+    if (debounceTimers.current[itemId]) clearTimeout(debounceTimers.current[itemId]);
+    debounceTimers.current[itemId] = setTimeout(() => commitQuantity(itemId), 350);
   };
 
   const handleRemove = async (itemId: number) => {

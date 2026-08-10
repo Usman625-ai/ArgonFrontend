@@ -34,6 +34,21 @@ const cartSlice = createSlice({
       .addCase(fetchCart.fulfilled, (s, a) => { s.isLoading = false; s.cart = a.payload; s.itemCount = a.payload?.items?.length || 0; })
       .addCase(fetchCart.rejected, (s) => { s.isLoading = false; })
       .addCase(addToCart.fulfilled, (s) => { s.itemCount += 1; })
+      .addCase(updateCartItem.fulfilled, (s, a) => {
+        // This was previously unhandled, meaning every quantity change had to
+        // be followed by a full fetchCart() just to see the new value — that
+        // extra round trip was the main source of the "increment feels slow"
+        // lag. Applying the response here means one request is enough.
+        if (s.cart && a.payload) {
+          const idx = s.cart.items.findIndex((i) => i.id === a.payload!.id);
+          if (idx !== -1) {
+            const delta = a.payload.itemTotal - s.cart.items[idx].itemTotal;
+            s.cart.items[idx] = a.payload;
+            s.cart.subtotal += delta;
+            s.cart.total += delta;
+          }
+        }
+      })
       .addCase(removeFromCart.fulfilled, (s, a) => { if (s.cart) { s.cart.items = s.cart.items.filter((i) => i.id !== a.payload); s.itemCount = s.cart.items.length; } })
       .addCase(clearCart.fulfilled, (s) => { s.cart = null; s.itemCount = 0; });
   },
