@@ -7,3 +7,4 @@ export { Skeleton, SkeletonCard, SkeletonRow, SkeletonTable } from './Skeleton';
 export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './Table';
 export { default as StarRating } from './StarRating';
 export { default as SmartImage } from './SmartImage';
+export { default as Logo } from './Logo';
