@@ -52,7 +52,7 @@ export interface Product {
   images: ProductImage[];
   primaryImageUrl?: string;
   categoryId?: number; categoryName?: string;
-  sellerId?: number; sellerName?: string; shopName?: string;
+  sellerId?: number; sellerName?: string; shopName?: string; sellerProfileImage?: string;
   category?: Category; seller?: Seller;
   averageRating: number; totalReviews: number; totalSold?: number;
   active: boolean; adminLocked?: boolean; featured?: boolean; tags?: string; specifications?: string; createdAt: string;

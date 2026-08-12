@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { ShoppingCart, Heart, Minus, Plus, Package, Truck, Shield, RotateCcw, ChevronLeft, MessageSquare, Check } from 'lucide-react';
+import { ShoppingCart, Heart, Minus, Plus, Package, Truck, Shield, RotateCcw, ChevronLeft, MessageSquare, Check, Store } from 'lucide-react';
 import api from '../../lib/api';
 import type { Product, Review, ApiResponse, PagedResponse } from '../../types';
 import { cn, formatPrice, formatDate, getEffectivePrice, getDiscountPercentage, getProductImages, truncate } from '../../lib/utils';
@@ -248,6 +248,24 @@ export default function ProductDetailPage() {
               </Button>
             </motion.div>
           </div>
+
+          {/* Sold by */}
+          {product.sellerName && (
+            <div className="flex items-center gap-3 rounded-lg border border-border p-3">
+              {product.sellerProfileImage ? (
+                <SmartImage src={product.sellerProfileImage} alt={product.sellerName} width={44} className="h-11 w-11 shrink-0 rounded-full" fallbackIcon={<Store className="h-5 w-5" />} />
+              ) : (
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                  {product.sellerName.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">Sold by</p>
+                <p className="truncate text-sm font-medium">{product.shopName || product.sellerName}</p>
+                {product.shopName && <p className="truncate text-xs text-muted-foreground">{product.sellerName}</p>}
+              </div>
+            </div>
+          )}
 
           {/* Trust badges */}
           <div className="grid grid-cols-3 gap-2 pt-2 sm:gap-3">
