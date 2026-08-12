@@ -7,6 +7,7 @@ import { toggleTheme } from '../../store/uiSlice';
 import { logout } from '../../store/authSlice';
 import { cn, getInitials } from '../../lib/utils';
 import NotificationBell from '../shared/NotificationBell';
+import { Logo } from '../ui';
 
 export default function CustomerNavbar() {
   const [scrolled, setScrolled] = useState(false); const [mm, setMm] = useState(false); const [um, setUm] = useState(false); const [sq, setSq] = useState('');
@@ -32,8 +33,8 @@ export default function CustomerNavbar() {
         <div className="flex h-[72px] items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <button onClick={() => setMm(true)} className="rounded-lg p-2 hover:bg-accent lg:hidden"><Menu className="h-5 w-5" /></button>
-            <Link to="/shop" className="flex items-center gap-0.5">
-              <span className="font-editorial text-[1.6rem] font-medium tracking-tight text-foreground">Argon</span>
+            <Link to="/shop" className="flex items-center">
+              <Logo size={32} wordmarkClassName="text-[1.6rem]" />
             </Link>
           </div>
           <nav className="hidden items-center gap-8 lg:flex">

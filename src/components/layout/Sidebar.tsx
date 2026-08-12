@@ -4,6 +4,7 @@ import { LayoutDashboard, Package, ShoppingCart, FolderTree, Ticket, Settings, F
 import { useAppDispatch, useAppSelector } from '../../store';
 import { logout } from '../../store/authSlice';
 import { cn } from '../../lib/utils';
+import { Logo } from '../ui';
 
 interface P { collapsed: boolean; mobileOpen?: boolean; onClose?: () => void; onToggleCollapse?: () => void; }
 
@@ -73,9 +74,8 @@ export default function Sidebar({ collapsed, mobileOpen, onClose, onToggleCollap
       >
         <div className="flex h-16 shrink-0 items-center justify-between px-4">
           <div className="flex items-center gap-2.5 overflow-hidden">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-primary-400 to-primary-600 font-editorial text-base font-semibold text-primary-foreground">
-              A
-            </div>
+            <Logo size={32} withWordmark={false} />
+
             {!collapsed && (
               <div className="leading-tight">
                 <span className="block font-editorial text-lg font-medium tracking-tight text-[#f0e9dd]">

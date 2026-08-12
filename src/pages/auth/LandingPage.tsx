@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAppSelector } from '../../store';
 import CountUp from '../../components/shared/CountUp';
+import { Logo } from '../../components/ui';
 
 /* 3D tilt that follows the cursor — mirrors the treatment used across the shop pages. */
 function TiltCard({ children, className, max = 8, glare = true }: { children: ReactNode; className?: string; max?: number; glare?: boolean }) {
@@ -143,8 +144,11 @@ export default function LandingPage() {
       <ParallaxField />
 
       <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-6 py-7">
-        <motion.span initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="font-editorial text-2xl font-medium tracking-tight">
-          Arg<span className="italic text-primary">on</span>
+        <motion.span initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="flex items-center gap-2">
+          <Logo size={30} withWordmark={false} />
+          <span className="font-editorial text-2xl font-medium tracking-tight">
+            Arg<span className="italic text-primary">on</span>
+          </span>
         </motion.span>
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="hidden items-center gap-3 sm:flex">
           <button onClick={() => navigate('/shop')} className="text-sm font-medium text-foreground/70 transition-colors hover:text-foreground">Browse as Guest</button>

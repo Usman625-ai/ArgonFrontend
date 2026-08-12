@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Mail, Lock, User, Store, Phone, Eye, EyeOff, ShieldCheck, ArrowLeft, RefreshCw } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { register as registerAction, verifyEmail, clearError } from '../../store/authSlice';
-import { Button, Input, Field, Select } from '../../components/ui';
+import { Button, Input, Field, Select, Logo } from '../../components/ui';
 import api from '../../lib/api';
 
 const schema = z.object({
@@ -146,7 +146,7 @@ export default function RegisterPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-md">
         <div className="mb-6 flex flex-col items-center gap-2 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary-400 to-primary-600 text-primary-foreground font-editorial text-xl font-medium">S</div>
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary-400 to-primary-600 p-2"><Logo size={28} withWordmark={false} /></div>
           <h1 className="font-editorial text-3xl font-medium tracking-tight">Create Account</h1>
           <p className="text-sm text-muted-foreground">Join Argon today</p>
         </div>

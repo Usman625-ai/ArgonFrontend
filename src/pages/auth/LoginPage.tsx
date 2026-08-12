@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Mail, Lock, Eye, EyeOff, ShoppingBag } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { login, logout, clearError } from '../../store/authSlice';
-import { Button, Input, Field } from '../../components/ui';
+import { Button, Input, Field, Logo } from '../../components/ui';
 
 const schema = z.object({
   email: z.string().min(1, 'Email is required').email('Please provide a valid email address'),
@@ -52,7 +52,7 @@ export default function LoginPage(_props: P) {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
         <div className="mb-6 flex flex-col items-center gap-2 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary-400 to-primary-600 text-primary-foreground font-editorial text-xl font-medium">S</div>
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary-400 to-primary-600 p-2"><Logo size={28} withWordmark={false} /></div>
           <h1 className="font-editorial text-3xl font-medium tracking-tight">Welcome Back</h1>
           <p className="text-sm text-muted-foreground">Login to your Argon account</p>
         </div>
