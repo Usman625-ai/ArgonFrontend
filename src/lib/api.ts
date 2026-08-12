@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { storage } from './utils';
 import { loadingBus } from './loadingBus';
+import { serverStatusBus } from './serverStatusBus';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -31,6 +32,10 @@ function isTrackableRequest(config: InternalAxiosRequestConfig): boolean {
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: { 'Content-Type': 'application/json' },
+  // Render's free tier can take a while to wake a sleeping instance; this is
+  // generous enough to cover a cold start but still bounded, so a genuinely
+  // dead backend or dropped connection doesn't hang the UI forever.
+  timeout: 30000,
 });
 
 api.interceptors.request.use(
@@ -56,10 +61,22 @@ const processQueue = (error: unknown, token: string | null) => {
 api.interceptors.response.use(
   (response) => {
     if (isTrackableRequest(response.config as InternalAxiosRequestConfig)) loadingBus.end();
+    serverStatusBus.reportUp();
     return response;
   },
   async (error: AxiosError) => {
     if (error.config && isTrackableRequest(error.config as InternalAxiosRequestConfig)) loadingBus.end();
+
+    // No response at all = the backend never answered (asleep, crashed, or
+    // unreachable) or the request never left the browser (no internet).
+    // A normal 4xx/5xx has a response and falls through to the logic below.
+    if (!error.response) {
+      const reason = typeof navigator !== 'undefined' && navigator.onLine === false ? 'offline' : 'server';
+      storage.remove('accessToken'); storage.remove('refreshToken'); storage.remove('user');
+      serverStatusBus.reportDown(reason);
+      return Promise.reject(error);
+    }
+
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {

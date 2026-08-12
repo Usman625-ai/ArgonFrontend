@@ -230,14 +230,12 @@ export default function ProductDetailPage() {
 
           {/* Quantity + Actions — wraps on mobile, single row on sm+ */}
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center rounded-lg border border-border">
-              <motion.button whileTap={{ scale: 0.85 }} onClick={() => setQuantity((q) => Math.max(1, q - 1))} className="flex h-10 w-10 items-center justify-center hover:bg-accent rounded-l-lg" disabled={outOfStock}><Minus className="h-4 w-4" /></motion.button>
-              <span className="relative flex w-12 items-center justify-center overflow-hidden text-sm font-medium">
-                <AnimatePresence mode="popLayout" initial={false}>
-                  <motion.span key={quantity} initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -12, opacity: 0 }} transition={{ duration: 0.15 }} className="absolute">{quantity}</motion.span>
-                </AnimatePresence>
-              </span>
-              <motion.button whileTap={{ scale: 0.85 }} onClick={() => setQuantity((q) => Math.min(product.stockQuantity, q + 1))} className="flex h-10 w-10 items-center justify-center hover:bg-accent rounded-r-lg" disabled={outOfStock}><Plus className="h-4 w-4" /></motion.button>
+            <div className="flex h-10 items-stretch overflow-hidden rounded-lg border border-border">
+              <motion.button whileTap={{ scale: 0.85 }} onClick={() => setQuantity((q) => Math.max(1, q - 1))} className="flex w-10 items-center justify-center hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40" disabled={outOfStock || quantity <= 1}><Minus className="h-4 w-4" /></motion.button>
+              <div className="flex w-11 items-center justify-center border-x border-border text-sm font-semibold tabular-nums">
+                {quantity}
+              </div>
+              <motion.button whileTap={{ scale: 0.85 }} onClick={() => setQuantity((q) => Math.min(product.stockQuantity, q + 1))} className="flex w-10 items-center justify-center hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40" disabled={outOfStock || quantity >= product.stockQuantity}><Plus className="h-4 w-4" /></motion.button>
             </div>
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} className="order-3 w-full sm:order-2 sm:w-auto sm:flex-1">
               <Button size="lg" onClick={handleAddToCart} disabled={outOfStock} className="w-full"><ShoppingCart className="h-5 w-5" /> Add to Cart</Button>
