@@ -39,6 +39,7 @@ const SellerProfilePage = lazy(() => import('./pages/seller/ProfilePage'));
 const HomePage = lazy(() => import('./pages/shop/HomePage'));
 const ProductsPage = lazy(() => import('./pages/shop/ProductsPage'));
 const ProductDetailPage = lazy(() => import('./pages/shop/ProductDetailPage'));
+const SellerStorefrontPage = lazy(() => import('./pages/shop/SellerStorefrontPage'));
 const CartPage = lazy(() => import('./pages/shop/CartPage'));
 const CheckoutPage = lazy(() => import('./pages/shop/CheckoutPage'));
 const OrdersPage = lazy(() => import('./pages/shop/OrdersPage'));
@@ -127,6 +128,7 @@ export default function App() {
             <Route index element={<HomePage />} />
             <Route path="products" element={<ProductsPage />} />
             <Route path="product/:slug" element={<ProductDetailPage />} />
+            <Route path="seller/:id" element={<SellerStorefrontPage />} />
 
             {/* Requires a logged-in customer */}
             <Route element={<ProtectedRoute allowedRoles={['CUSTOMER']}><Outlet /></ProtectedRoute>}>

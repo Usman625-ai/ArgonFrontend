@@ -156,6 +156,12 @@ export interface SellerDashboardStats {
   ordersByStatus?: Record<string, number>;
 }
 
+export interface SellerPublicProfile {
+  id: number; name: string; shopName?: string; shopDescription?: string;
+  shopLogo?: string; shopBanner?: string; memberSince: string;
+  totalProducts: number; ordersDelivered: number; averageRating?: number; totalReviews: number;
+}
+
 export interface PagedResponse<T> {
   content: T[]; totalElements: number; totalPages: number;
   pageSize: number; pageNumber: number; first: boolean; last: boolean;
