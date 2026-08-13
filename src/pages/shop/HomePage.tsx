@@ -431,9 +431,6 @@ export default function HomePage() {
                         )}
                         <div className={`absolute inset-x-0 bottom-0 ${featured ? 'p-5' : 'p-3'}`}>
                           <p className={`truncate font-medium text-white ${featured ? 'font-editorial text-2xl' : 'text-sm'}`}>{cat.name}</p>
-                          {typeof cat.productCount === 'number' && (
-                            <p className={`mt-0.5 text-white/50 ${featured ? 'text-xs' : 'text-[10px]'}`}>{cat.productCount} {cat.productCount === 1 ? 'item' : 'items'}</p>
-                          )}
                           <p className={`flex translate-y-1 items-center gap-1 text-primary-300 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-active:translate-y-0 group-active:opacity-100 ${featured ? 'mt-2 text-xs' : 'mt-0.5 text-[11px]'}`}>Shop now <ArrowRight className="h-2.5 w-2.5" /></p>
                         </div>
                       </div>
