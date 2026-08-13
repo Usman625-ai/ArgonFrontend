@@ -377,7 +377,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Categories — Editorial Mosaic with 3D tilt */}
+      {/* Categories — Premium Bento Grid */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -393,43 +393,55 @@ export default function HomePage() {
           <Link to="/shop/products" className="group flex items-center gap-1 text-sm font-medium text-primary">View all<ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" /></Link>
         </motion.div>
         {loading ? (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">{Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}</div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">{Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}</div>
         ) : categories.length === 0 ? (
           <EmptyState icon={Package} title="No categories yet" description="Categories will appear here once sellers add them." />
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-            {categories.map((cat, i) => (
-              <motion.div
-                key={cat.id}
-                initial={{ opacity: 0, y: 20, filter: 'blur(8px)' }}
-                whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{ delay: Math.min(i * 0.05, 0.35), duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="h-full [transform-style:preserve-3d]"
-              >
-                <TiltCard className="group h-full" max={9}>
-                  <Link to={`/shop/products?categoryId=${cat.id}`} className="block h-full">
-                    <div className="relative aspect-[4/5] overflow-hidden rounded-lg border border-border/60 bg-card">
-                      {cat.imageUrl ? (
-                        <SmartImage src={cat.imageUrl} alt={cat.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110 group-active:scale-110" fallbackIcon={<Package className="h-10 w-10 text-primary/40" />} />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-secondary/40 to-secondary/10">
-                          <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: i * 0.2 }}>
-                            <Package className="h-10 w-10 text-primary/40" />
-                          </motion.div>
+          <div className="grid grid-cols-2 auto-rows-[130px] gap-3 sm:grid-cols-4 sm:auto-rows-[150px] lg:grid-cols-6 lg:auto-rows-[160px]">
+            {categories.slice(0, 9).map((cat, i) => {
+              const featured = i === 0;
+              return (
+                <motion.div
+                  key={cat.id}
+                  initial={{ opacity: 0, y: 20, filter: 'blur(8px)' }}
+                  whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ delay: Math.min(i * 0.05, 0.35), duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                  className={`[transform-style:preserve-3d] ${featured ? 'col-span-2 row-span-2' : 'col-span-1 row-span-1'}`}
+                >
+                  <TiltCard className="group h-full" max={8}>
+                    <Link to={`/shop/products?categoryId=${cat.id}`} className="block h-full">
+                      <div className="relative h-full overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm transition-shadow duration-300 group-hover:shadow-lg group-hover:shadow-primary/10">
+                        {cat.imageUrl ? (
+                          <SmartImage src={cat.imageUrl} alt={cat.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110 group-active:scale-110" fallbackIcon={<Package className={featured ? 'h-14 w-14 text-primary/40' : 'h-8 w-8 text-primary/40'} />} />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-secondary/40 to-secondary/10">
+                            <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: i * 0.2 }}>
+                              <Package className={featured ? 'h-14 w-14 text-primary/40' : 'h-8 w-8 text-primary/40'} />
+                            </motion.div>
+                          </div>
+                        )}
+                        <div className={`absolute inset-0 ${cardGradient}`} />
+                        <div className="pointer-events-none absolute inset-0 rounded-[inherit] ring-1 ring-inset ring-white/[0.06] transition-all duration-300 group-hover:ring-primary/25" />
+                        <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full group-active:translate-x-full" />
+                        {featured && (
+                          <span className="absolute left-4 top-4 inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary-300 backdrop-blur">
+                            <Sparkles className="h-3 w-3" /> Featured
+                          </span>
+                        )}
+                        <div className={`absolute inset-x-0 bottom-0 ${featured ? 'p-5' : 'p-3'}`}>
+                          <p className={`truncate font-medium text-white ${featured ? 'font-editorial text-2xl' : 'text-sm'}`}>{cat.name}</p>
+                          {typeof cat.productCount === 'number' && (
+                            <p className={`mt-0.5 text-white/50 ${featured ? 'text-xs' : 'text-[10px]'}`}>{cat.productCount} {cat.productCount === 1 ? 'item' : 'items'}</p>
+                          )}
+                          <p className={`flex translate-y-1 items-center gap-1 text-primary-300 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-active:translate-y-0 group-active:opacity-100 ${featured ? 'mt-2 text-xs' : 'mt-0.5 text-[11px]'}`}>Shop now <ArrowRight className="h-2.5 w-2.5" /></p>
                         </div>
-                      )}
-                      <div className={`absolute inset-0 ${cardGradient}`} />
-                      <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full group-active:translate-x-full" />
-                      <div className="absolute inset-x-0 bottom-0 p-3">
-                        <p className="truncate text-sm font-medium text-white">{cat.name}</p>
-                        <p className="mt-0.5 flex translate-y-1 items-center gap-1 text-[11px] text-primary-300 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-active:translate-y-0 group-active:opacity-100">Shop now <ArrowRight className="h-2.5 w-2.5" /></p>
                       </div>
-                    </div>
-                  </Link>
-                </TiltCard>
-              </motion.div>
-            ))}
+                    </Link>
+                  </TiltCard>
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </section>

@@ -26,7 +26,7 @@ export default function CustomerNavbar() {
   useEffect(() => { setMm(false); setUm(false); }, [loc.pathname]);
   const handleSearch = (e: React.FormEvent) => { e.preventDefault(); if (sq.trim()) navigate(`/shop/products?q=${encodeURIComponent(sq)}`); };
   const handleLogout = async () => { await dispatch(logout()); navigate('/'); };
-  const links = [{ to: '/shop', label: 'Home' }, { to: '/shop/products', label: 'Products' }, { to: '/shop/orders', label: 'Orders' }, { to: '/shop/wishlist', label: 'Wishlist' }];
+  const links = [{ to: '/shop', label: 'Home' }, { to: '/shop/products', label: 'Products' }, { to: '/shop/about', label: 'About' }, { to: '/shop/orders', label: 'Orders' }, { to: '/shop/wishlist', label: 'Wishlist' }];
   return (
     <header className={cn('sticky top-0 z-40 w-full transition-all duration-300', scrolled ? 'bg-background/90 shadow-[0_1px_0_0_hsl(var(--border))] backdrop-blur-md' : 'bg-background')}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

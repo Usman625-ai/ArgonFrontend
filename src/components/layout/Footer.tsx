@@ -38,7 +38,7 @@ const linkGroups = [
   {
     title: 'Company',
     links: [
-      { label: 'About Argon', to: '/shop' },
+      { label: 'About Argon', to: '/shop/about' },
       { label: 'Become a Seller', to: '/register' },
       { label: 'Privacy Policy', to: '#' },
       { label: 'Terms of Service', to: '#' },

@@ -151,6 +151,8 @@ export default function LandingPage() {
           </span>
         </motion.span>
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="hidden items-center gap-3 sm:flex">
+          <button onClick={() => navigate('/shop/about')} className="text-sm font-medium text-foreground/70 transition-colors hover:text-foreground">About</button>
+          <span className="h-4 w-px bg-border" />
           <button onClick={() => navigate('/shop')} className="text-sm font-medium text-foreground/70 transition-colors hover:text-foreground">Browse as Guest</button>
           <span className="h-4 w-px bg-border" />
           <button onClick={() => navigate('/login')} className="text-sm font-medium text-foreground/70 transition-colors hover:text-foreground">Sign in</button>
