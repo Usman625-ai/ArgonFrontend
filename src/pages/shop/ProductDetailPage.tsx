@@ -363,13 +363,20 @@ export default function ProductDetailPage() {
                   <Card>
                     <CardContent className="pt-4">
                       <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">{(r.userName || 'U').charAt(0).toUpperCase()}</div>
+                        <button
+                          onClick={() => navigate(`/shop/reviewer/${r.userId}`)}
+                          className="group flex items-center gap-3 text-left"
+                        >
+                          {r.userProfileImage ? (
+                            <SmartImage src={r.userProfileImage} alt={r.userName || 'Reviewer'} width={40} className="h-10 w-10 shrink-0 rounded-full" />
+                          ) : (
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">{(r.userName || 'U').charAt(0).toUpperCase()}</div>
+                          )}
                           <div>
-                            <p className="text-sm font-medium">{r.userName || 'Anonymous'}</p>
+                            <p className="text-sm font-medium group-hover:underline">{r.userName || 'Anonymous'}</p>
                             <div className="flex items-center gap-2"><StarRating rating={r.rating} size={14} /><span className="text-xs text-muted-foreground">{formatDate(r.createdAt)}</span></div>
                           </div>
-                        </div>
+                        </button>
                       </div>
                       <p className="mt-3 text-sm text-muted-foreground">{r.comment}</p>
                     </CardContent>
@@ -408,4 +415,3 @@ export default function ProductDetailPage() {
     </div>
   );
 }
-

@@ -122,9 +122,14 @@ export interface Order {
 }
 
 export interface Review {
-  id: number; productId: number; userId: number; userName: string;
+  id: number; productId: number; productName?: string; productSlug?: string; productImage?: string;
+  userId: number; userName: string; userProfileImage?: string;
   rating: number; comment: string; verifiedPurchase?: boolean;
   helpfulCount?: number; createdAt: string;
+}
+
+export interface CustomerPublicProfile {
+  id: number; name: string; profileImage?: string; memberSince: string; totalReviews: number;
 }
 
 export interface Coupon {

@@ -37,10 +37,10 @@ const SellerProfilePage = lazy(() => import('./pages/seller/ProfilePage'));
 
 // Shop pages
 const HomePage = lazy(() => import('./pages/shop/HomePage'));
-const AboutPage = lazy(() => import('./pages/shop/AboutPage'));
 const ProductsPage = lazy(() => import('./pages/shop/ProductsPage'));
 const ProductDetailPage = lazy(() => import('./pages/shop/ProductDetailPage'));
 const SellerStorefrontPage = lazy(() => import('./pages/shop/SellerStorefrontPage'));
+const ReviewerProfilePage = lazy(() => import('./pages/shop/ReviewerProfilePage'));
 const CartPage = lazy(() => import('./pages/shop/CartPage'));
 const CheckoutPage = lazy(() => import('./pages/shop/CheckoutPage'));
 const OrdersPage = lazy(() => import('./pages/shop/OrdersPage'));
@@ -127,10 +127,10 @@ export default function App() {
           {/* Shop Routes — public browsing, gated personal routes */}
           <Route path="/shop" element={<CustomerLayout />}>
             <Route index element={<HomePage />} />
-            <Route path="about" element={<AboutPage />} />
             <Route path="products" element={<ProductsPage />} />
             <Route path="product/:slug" element={<ProductDetailPage />} />
             <Route path="seller/:id" element={<SellerStorefrontPage />} />
+            <Route path="reviewer/:id" element={<ReviewerProfilePage />} />
 
             {/* Requires a logged-in customer */}
             <Route element={<ProtectedRoute allowedRoles={['CUSTOMER']}><Outlet /></ProtectedRoute>}>
