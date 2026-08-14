@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import api from '../../lib/api';
@@ -22,17 +22,63 @@ interface ProductFormData {
   stockQuantity: string;
   brand: string;
   categoryId: string;
-  tags: string;
-  specifications: string;
   featured: boolean;
   imageUrls: string[];
 }
 
+interface SpecRow {
+  id: string;
+  key: string;
+  value: string;
+}
+
 const emptyForm: ProductFormData = {
   name: '', description: '', shortDescription: '', price: '', discountedPrice: '',
-  stockQuantity: '', brand: '', categoryId: '', tags: '', specifications: '',
+  stockQuantity: '', brand: '', categoryId: '',
   featured: false, imageUrls: [],
 };
+
+// Common specification keys pulled from existing catalog data
+// (e.g. {"color": "Multiple", "origin": "Imported", "warranty": "1 Year"})
+// plus other frequently-used product attributes. Sellers can still type a
+// custom key via the "Custom..." option.
+const SPEC_KEY_PRESETS = [
+  'Color', 'Origin', 'Warranty', 'Material', 'Size', 'Weight',
+  'Model Number', 'Battery Life', 'Dimensions', 'Power', 'Capacity',
+];
+
+const newSpecRow = (): SpecRow => ({ id: crypto.randomUUID(), key: '', value: '' });
+
+/** Safely parses the backend's JSON-array-as-string `tags` field into a
+ * plain string[] for the chip UI. Falls back to comma-splitting so old,
+ * malformed (pre-fix) data doesn't crash the edit form. */
+function parseTags(raw: string | null | undefined): string[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean);
+  } catch {
+    // legacy/malformed value — recover by treating it as comma-separated text
+  }
+  return raw.split(',').map((t) => t.trim()).filter(Boolean);
+}
+
+/** Safely parses the backend's JSON-object-as-string `specifications`
+ * field into editable key/value rows. */
+function parseSpecs(raw: string | null | undefined): SpecRow[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      return Object.entries(parsed).map(([key, value]) => ({
+        id: crypto.randomUUID(), key, value: String(value),
+      }));
+    }
+  } catch {
+    // legacy/malformed value — start fresh rather than pass bad JSON back
+  }
+  return [];
+}
 
 const LOW_STOCK_THRESHOLD = 10;
 
@@ -57,6 +103,9 @@ export default function ProductsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [form, setForm] = useState<ProductFormData>(emptyForm);
+  const [tagsList, setTagsList] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
+  const [specRows, setSpecRows] = useState<SpecRow[]>([]);
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -101,6 +150,9 @@ export default function ProductsPage() {
   const openCreate = () => {
     setEditing(null);
     setForm(emptyForm);
+    setTagsList([]);
+    setTagInput('');
+    setSpecRows([]);
     setModalOpen(true);
   };
 
@@ -116,13 +168,37 @@ export default function ProductsPage() {
       stockQuantity: String(product.stockQuantity),
       brand: product.brand || '',
       categoryId: String(product.categoryId || product.category?.id || ''),
-      tags: product.tags || '',
-      specifications: product.specifications || '',
       featured: product.featured || false,
       imageUrls: imgs,
     });
+    setTagsList(parseTags(product.tags));
+    setTagInput('');
+    setSpecRows(parseSpecs(product.specifications));
     setModalOpen(true);
   };
+
+  // --- Tag chip helpers ---
+  const addTag = (raw: string) => {
+    const t = raw.trim();
+    if (!t) return;
+    setTagsList((prev) => (prev.includes(t) ? prev : [...prev, t]));
+    setTagInput('');
+  };
+  const removeTag = (t: string) => setTagsList((prev) => prev.filter((x) => x !== t));
+  const handleTagInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addTag(tagInput);
+    } else if (e.key === 'Backspace' && !tagInput && tagsList.length > 0) {
+      removeTag(tagsList[tagsList.length - 1]);
+    }
+  };
+
+  // --- Specification row helpers ---
+  const addSpecRow = () => setSpecRows((prev) => [...prev, newSpecRow()]);
+  const removeSpecRow = (id: string) => setSpecRows((prev) => prev.filter((r) => r.id !== id));
+  const updateSpecRow = (id: string, patch: Partial<SpecRow>) =>
+    setSpecRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
 
   const handleSave = async () => {
     if (!form.name || !form.description || !form.price || !form.stockQuantity || !form.categoryId) {
@@ -133,6 +209,15 @@ export default function ProductsPage() {
       toast.error('Please add at least one product image');
       return;
     }
+    // If the user was mid-way through typing a tag when they hit Save, don't drop it.
+    const finalTags = tagInput.trim() ? [...tagsList, tagInput.trim()] : tagsList;
+
+    // Only keep rows where both key and value are filled in, so a blank
+    // trailing row never gets sent as {"": ""}.
+    const specsObject = Object.fromEntries(
+      specRows.filter((r) => r.key.trim() && r.value.trim()).map((r) => [r.key.trim(), r.value.trim()])
+    );
+
     setSaving(true);
     const payload = {
       name: form.name,
@@ -143,8 +228,11 @@ export default function ProductsPage() {
       stockQuantity: parseInt(form.stockQuantity, 10),
       brand: form.brand,
       categoryId: parseInt(form.categoryId, 10),
-      tags: form.tags,
-      specifications: form.specifications,
+      // Backend columns are MySQL JSON type — always send valid JSON text,
+      // never raw comma-separated / freeform strings (that's what was
+      // causing "Data truncation: Invalid JSON text").
+      tags: JSON.stringify(finalTags),
+      specifications: JSON.stringify(specsObject),
       featured: form.featured,
       imageUrls: form.imageUrls,
     };
@@ -484,34 +572,92 @@ export default function ProductsPage() {
             </Field>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Category" required>
-              <Select
-                value={form.categoryId}
-                onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
-              >
-                <option value="">Select category</option>
-                {flattenCategories(categories).map((c) => (
-                  <option key={c.id} value={c.id}>{'—'.repeat(c.depth) + (c.depth > 0 ? ' ' : '')}{c.name}</option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Tags (comma-separated)">
-              <Input
-                value={form.tags}
-                onChange={(e) => setForm({ ...form, tags: e.target.value })}
-                placeholder="electronics, audio, wireless"
-              />
-            </Field>
-          </div>
+          <Field label="Category" required>
+            <Select
+              value={form.categoryId}
+              onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
+            >
+              <option value="">Select category</option>
+              {flattenCategories(categories).map((c) => (
+                <option key={c.id} value={c.id}>{'—'.repeat(c.depth) + (c.depth > 0 ? ' ' : '')}{c.name}</option>
+              ))}
+            </Select>
+          </Field>
 
-          <Field label="Specifications (JSON or text)">
-            <Textarea
-              value={form.specifications}
-              onChange={(e) => setForm({ ...form, specifications: e.target.value })}
-              placeholder='{"weight": "250g", "battery": "20h"}'
-              rows={3}
-            />
+          <Field label="Tags">
+            <div className="flex flex-wrap items-center gap-1.5 rounded-md border border-input bg-card px-2.5 py-2 focus-within:ring-2 focus-within:ring-ring/40 focus-within:border-ring">
+              {tagsList.map((t) => (
+                <Badge key={t} variant="secondary" className="gap-1 pr-1">
+                  {t}
+                  <button
+                    type="button"
+                    onClick={() => removeTag(t)}
+                    className="rounded-full p-0.5 hover:bg-muted-foreground/20"
+                    aria-label={`Remove ${t}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              <input
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={handleTagInputKeyDown}
+                onBlur={() => addTag(tagInput)}
+                placeholder={tagsList.length === 0 ? 'electronics, audio, wireless…' : ''}
+                className="min-w-[120px] flex-1 border-0 bg-transparent p-1 text-sm outline-none placeholder:text-muted-foreground/70"
+              />
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">Press Enter or comma to add a tag.</p>
+          </Field>
+
+          <Field label="Specifications">
+            <div className="space-y-2">
+              {specRows.map((row) => (
+                <div key={row.id} className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <Select
+                    value={SPEC_KEY_PRESETS.includes(row.key) ? row.key : (row.key ? 'Custom' : '')}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      updateSpecRow(row.id, { key: v === 'Custom' ? '' : v });
+                    }}
+                    className="sm:w-44 sm:shrink-0"
+                  >
+                    <option value="">Select attribute…</option>
+                    {SPEC_KEY_PRESETS.map((k) => (
+                      <option key={k} value={k}>{k}</option>
+                    ))}
+                    <option value="Custom">Custom…</option>
+                  </Select>
+                  {(!SPEC_KEY_PRESETS.includes(row.key)) && (
+                    <Input
+                      value={row.key}
+                      onChange={(e) => updateSpecRow(row.id, { key: e.target.value })}
+                      placeholder="Attribute name"
+                      className="sm:w-40 sm:shrink-0"
+                    />
+                  )}
+                  <Input
+                    value={row.value}
+                    onChange={(e) => updateSpecRow(row.id, { value: e.target.value })}
+                    placeholder="Value, e.g. Multiple / Imported / 1 Year"
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => removeSpecRow(row.id)}
+                    aria-label="Remove specification"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button type="button" variant="outline" size="sm" onClick={addSpecRow}>
+                <Plus className="h-4 w-4" /> Add Specification
+              </Button>
+            </div>
           </Field>
 
           <Field label="Product Images" required>
@@ -593,4 +739,3 @@ export default function ProductsPage() {
     </div>
   );
 }
-
