@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { motion, useMotionValue, useSpring, useTransform, type MotionStyle } from 'framer-motion';
 import {
   ShoppingBag, Store, ArrowRight, Sparkles, Shield, Truck, Compass,
-  Headphones, Star, Package, Heart, TrendingUp,
+  Headphones, Package, Heart, TrendingUp, Users,
 } from 'lucide-react';
 import { useAppSelector } from '../../store';
 import CountUp from '../../components/shared/CountUp';
 import { Logo } from '../../components/ui';
+import usePlatformStats from '../../hooks/usePlatformStats';
 
 /* 3D tilt that follows the cursor — mirrors the treatment used across the shop pages. */
 function TiltCard({ children, className, max = 8, glare = true }: { children: ReactNode; className?: string; max?: number; glare?: boolean }) {
@@ -116,12 +117,6 @@ const features = [
   { icon: Store, t: 'Verified Sellers', d: 'Quality you can trust' },
 ];
 
-const stats = [
-  { icon: Store, value: 1200, suffix: '+', label: 'Verified sellers' },
-  { icon: Package, value: 25000, suffix: '+', label: 'Products listed' },
-  { icon: Star, value: 98, suffix: '%', label: 'Satisfaction rate' },
-];
-
 const whyCards = [
   { icon: TrendingUp, title: 'Curated marketplace', desc: 'Every seller is vetted so you shop with confidence, not guesswork.', tone: 'from-[#241812] to-[#0f0b08]' },
   { icon: Heart, title: 'Built around you', desc: 'Wishlists, order tracking, and instant notifications keep you in control.', tone: 'from-[#1a1f1a] to-[#0b0d0a]' },
@@ -131,6 +126,14 @@ const whyCards = [
 export default function LandingPage() {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAppSelector((s) => s.auth);
+  const { stats: platformStats } = usePlatformStats();
+
+  // Real, live counts — no hardcoded marketing numbers.
+  const stats = [
+    { icon: Store, value: platformStats.verifiedSellers, suffix: '+', label: 'Verified sellers' },
+    { icon: Users, value: platformStats.totalCustomers, suffix: '+', label: 'Happy customers' },
+    { icon: Package, value: platformStats.totalProducts, suffix: '+', label: 'Products listed' },
+  ];
 
   useEffect(() => {
     if (isAuthenticated && user) {

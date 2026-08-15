@@ -174,6 +174,14 @@ export interface PagedResponse<T> {
 
 export interface ApiResponse<T> { success: boolean; message: string; data: T; error?: string; }
 
+export interface PlatformStats {
+  verifiedSellers: number;
+  totalCustomers: number;
+  totalProducts: number;
+  /** null when there are no reviews on the platform yet */
+  averageRating: number | null;
+}
+
 export interface AuthResponse {
   userId: number; name: string; email: string; role: UserRole;
   accessToken: string; refreshToken: string; tokenType: string;

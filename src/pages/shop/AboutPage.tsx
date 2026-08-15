@@ -15,14 +15,10 @@ import {
   Search,
   ShoppingBag,
   CheckCircle2,
+  Users,
 } from 'lucide-react';
 import CountUp from '../../components/shared/CountUp';
-
-const stats = [
-  { icon: Store, value: 1200, suffix: '+', label: 'Verified sellers' },
-  { icon: Package, value: 25000, suffix: '+', label: 'Products listed' },
-  { icon: Star, value: 98, suffix: '%', label: 'Satisfaction rate' },
-];
+import usePlatformStats from '../../hooks/usePlatformStats';
 
 const values = [
   { icon: ShieldCheck, title: 'Trust first', desc: 'Every seller on Argon is vetted before they can list, so you shop with confidence instead of guesswork.' },
@@ -58,6 +54,20 @@ function FadeIn({ children, delay = 0, className }: { children: ReactNode; delay
 }
 
 export default function AboutPage() {
+  const { stats: platformStats } = usePlatformStats();
+
+  // Real, live counts from the backend — no hardcoded marketing numbers.
+  // Satisfaction rate only shows once there's at least one real review;
+  // showing a fabricated percentage before then would be misleading.
+  const stats = [
+    { icon: Store, value: platformStats.verifiedSellers, suffix: '+', label: 'Verified sellers' },
+    { icon: Users, value: platformStats.totalCustomers, suffix: '+', label: 'Happy customers' },
+    { icon: Package, value: platformStats.totalProducts, suffix: '+', label: 'Products listed' },
+    ...(platformStats.averageRating != null
+      ? [{ icon: Star, value: Math.round((platformStats.averageRating / 5) * 100), suffix: '%', label: 'Satisfaction rate' }]
+      : []),
+  ];
+
   return (
     <div className="pb-24">
       {/* Hero */}
@@ -82,7 +92,7 @@ export default function AboutPage() {
             </p>
           </FadeIn>
 
-          <FadeIn delay={0.26} className="mx-auto mt-12 flex max-w-lg justify-center gap-10 border-t border-white/10 pt-8 sm:gap-14">
+          <FadeIn delay={0.26} className="mx-auto mt-12 flex max-w-2xl flex-wrap justify-center gap-x-10 gap-y-6 border-t border-white/10 pt-8 sm:gap-x-14">
             {stats.map((s) => (
               <div key={s.label} className="text-center">
                 <p className="flex items-center justify-center gap-1.5 font-editorial text-2xl font-medium tracking-tight sm:text-3xl">
