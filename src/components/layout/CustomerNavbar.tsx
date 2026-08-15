@@ -28,13 +28,18 @@ export default function CustomerNavbar() {
   const handleLogout = async () => { await dispatch(logout()); navigate('/'); };
   const links = [{ to: '/shop', label: 'Home' }, { to: '/shop/products', label: 'Products' }, { to: '/shop/about', label: 'About' }, { to: '/shop/orders', label: 'Orders' }, { to: '/shop/wishlist', label: 'Wishlist' }];
   return (
-    <header className={cn('sticky top-0 z-40 w-full transition-all duration-300', scrolled ? 'bg-background/90 shadow-[0_1px_0_0_hsl(var(--border))] backdrop-blur-md' : 'bg-background')}>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-[72px] items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setMm(true)} className="rounded-lg p-2 hover:bg-accent lg:hidden"><Menu className="h-5 w-5" /></button>
-            <Link to="/shop" className="flex items-center">
-              <Logo size={32} wordmarkClassName="text-[1.6rem]" />
+    <header className={cn('sticky top-0 z-40 w-full overflow-x-hidden transition-all duration-300', scrolled ? 'bg-background/90 shadow-[0_1px_0_0_hsl(var(--border))] backdrop-blur-md' : 'bg-background')}>
+      <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
+        <div className="flex h-[72px] items-center justify-between gap-2 sm:gap-4">
+          <div className="flex min-w-0 shrink items-center gap-2 sm:gap-3">
+            <button onClick={() => setMm(true)} className="shrink-0 rounded-lg p-2 hover:bg-accent lg:hidden"><Menu className="h-5 w-5" /></button>
+            <Link to="/shop" className="flex min-w-0 items-center">
+              {/* Wordmark hidden below `sm` — the mark alone plus the full
+                  right-side icon cluster (theme/notifications/cart/profile)
+                  don't both fit on narrow phones, which was pushing the
+                  profile avatar off the edge of the screen. */}
+              <Logo size={28} withWordmark={false} className="sm:hidden" />
+              <Logo size={32} wordmarkClassName="text-[1.6rem]" className="hidden sm:inline-flex" />
             </Link>
           </div>
           <nav className="hidden items-center gap-8 lg:flex">
@@ -48,11 +53,11 @@ export default function CustomerNavbar() {
           <form onSubmit={handleSearch} className="hidden flex-1 max-w-xs md:block">
             <div className="relative"><Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><input type="text" value={sq} onChange={(e) => setSq(e.target.value)} placeholder="Search products..." className="h-10 w-full rounded-full border border-input bg-secondary/60 pl-10 pr-4 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:bg-card" /></div>
           </form>
-          <div className="flex items-center gap-1">
-            <button onClick={() => dispatch(toggleTheme())} className="rounded-lg p-2 text-muted-foreground hover:bg-accent transition-colors">{theme === 'dark' ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}</button>
+          <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
+            <button onClick={() => dispatch(toggleTheme())} className="rounded-lg p-1.5 text-muted-foreground hover:bg-accent transition-colors sm:p-2">{theme === 'dark' ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}</button>
             <Link to="/shop/wishlist" className="hidden rounded-lg p-2 text-muted-foreground hover:bg-accent transition-colors sm:block"><Heart className="h-[18px] w-[18px]" /></Link>
             {isAuthenticated && <NotificationBell basePath="/api/customer" />}
-            <Link to="/shop/cart" className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-accent">
+            <Link to="/shop/cart" className="relative rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-accent sm:p-2">
               <motion.span animate={itemCount > 0 ? { rotate: [0, -12, 10, -6, 0] } : {}} transition={{ duration: 0.4 }} className="block">
                 <ShoppingCart className="h-[18px] w-[18px]" />
               </motion.span>
@@ -72,8 +77,8 @@ export default function CustomerNavbar() {
               </AnimatePresence>
             </Link>
             {isAuthenticated ? (
-              <div className="relative ml-1">
-                <button onClick={() => setUm(!um)} className="flex items-center gap-1.5 rounded-full p-1 hover:bg-accent transition-colors"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary-400 to-primary-600 text-[0.8rem] font-semibold text-primary-foreground">{getInitials(user?.name || 'U')}</div><ChevronDown className="hidden h-4 w-4 text-muted-foreground sm:block" /></button>
+              <div className="relative ml-0.5 shrink-0 sm:ml-1">
+                <button onClick={() => setUm(!um)} className="flex items-center gap-1.5 rounded-full p-1 hover:bg-accent transition-colors"><div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-400 to-primary-600 text-[0.8rem] font-semibold text-primary-foreground">{getInitials(user?.name || 'U')}</div><ChevronDown className="hidden h-4 w-4 text-muted-foreground sm:block" /></button>
                 <AnimatePresence>
                   {um && <motion.div initial={{ opacity: 0, y: -8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.98 }} transition={{ duration: 0.15 }} className="absolute right-0 top-12 w-56 overflow-hidden rounded-lg border border-border/70 bg-card shadow-luxury-lg">
                     <div className="border-b border-border/70 p-3"><p className="text-sm font-medium">{user?.name}</p><p className="truncate text-xs text-muted-foreground">{user?.email}</p></div>

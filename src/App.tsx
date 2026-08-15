@@ -5,6 +5,7 @@ import { CustomerLayout, DashboardLayout, ProtectedRoute } from './components/la
 import LandingPage from './pages/auth/LandingPage';
 import SlowLoadingOverlay from './components/shared/SlowLoadingOverlay';
 import ServerStatusGate from './components/shared/ServerStatusGate';
+import ScrollToTop from './components/shared/ScrollToTop';
 
 // Auth pages — LandingPage stays eager (it's the "/" entry route for every
 // visitor), everything else is lazy so the first paint on "/" stays light.
@@ -76,6 +77,7 @@ const SellerLayoutElement = (
 export default function App() {
   return (
     <ErrorBoundary>
+      <ScrollToTop />
       <ServerStatusGate />
       <SlowLoadingOverlay />
       <Suspense fallback={<RouteFallback />}>
