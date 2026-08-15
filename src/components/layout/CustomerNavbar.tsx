@@ -28,7 +28,7 @@ export default function CustomerNavbar() {
   const handleLogout = async () => { await dispatch(logout()); navigate('/'); };
   const links = [{ to: '/shop', label: 'Home' }, { to: '/shop/products', label: 'Products' }, { to: '/shop/about', label: 'About' }, { to: '/shop/orders', label: 'Orders' }, { to: '/shop/wishlist', label: 'Wishlist' }];
   return (
-    <header className={cn('sticky top-0 z-40 w-full overflow-x-hidden transition-all duration-300', scrolled ? 'bg-background/90 shadow-[0_1px_0_0_hsl(var(--border))] backdrop-blur-md' : 'bg-background')}>
+    <header className={cn('sticky top-0 z-40 w-full transition-all duration-300', scrolled ? 'bg-background/90 shadow-[0_1px_0_0_hsl(var(--border))] backdrop-blur-md' : 'bg-background')}>
       <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
         <div className="flex h-[72px] items-center justify-between gap-2 sm:gap-4">
           <div className="flex min-w-0 shrink items-center gap-2 sm:gap-3">
