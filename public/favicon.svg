@@ -1,0 +1,23 @@
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#1E1712"/>
+            <stop offset="1" stop-color="#120D0A"/>
+        </linearGradient>
+        <linearGradient id="argonGold" x1="20" y1="14" x2="80" y2="84" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#E9CB99"/>
+            <stop offset="0.42" stop-color="#C19057"/>
+            <stop offset="1" stop-color="#8A5B2E"/>
+        </linearGradient>
+        <linearGradient id="argonShine" x1="34" y1="16" x2="54" y2="46" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.5"/>
+            <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+        </linearGradient>
+    </defs>
+    <rect width="100" height="100" rx="22" fill="url(#bg)"/>
+    <rect x="1" y="1" width="98" height="98" rx="21" stroke="#C19057" stroke-opacity="0.25"/>
+    <g transform="translate(0,3) scale(0.82) translate(11,8)">
+        <path d="M50,8 L86,90 L14,90 Z M50,40 L64.1,72 L35.9,72 Z" fill-rule="evenodd" fill="url(#argonGold)"/>
+        <path d="M50,8 L61,32 L50,40 L40,32 Z" fill="url(#argonShine)"/>
+    </g>
+</svg>

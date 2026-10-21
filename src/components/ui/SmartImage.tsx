@@ -1,0 +1,60 @@
+import { useState, type ImgHTMLAttributes } from 'react';
+import { Package } from 'lucide-react';
+import { cn, cloudinaryResize } from '../../lib/utils';
+
+interface SmartImageProps extends ImgHTMLAttributes<HTMLImageElement> {
+  src?: string;
+  alt: string;
+  fallbackIcon?: React.ReactNode;
+  aspect?: 'square' | 'video' | 'auto';
+  /** Requested render width in px — used to fetch a right-sized Cloudinary
+   * variant instead of always downloading the full-size original. Pick the
+   * largest size this image will actually render at (e.g. 300 for a grid
+   * card, 800 for a product-detail hero). */
+  width?: number;
+}
+
+export default function SmartImage({
+  src,
+  alt,
+  className,
+  fallbackIcon,
+  aspect = 'square',
+  width,
+  ...rest
+}: SmartImageProps) {
+  const [errored, setErrored] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  const showFallback = !src || errored;
+  const aspectClass = aspect === 'square' ? 'aspect-square' : aspect === 'video' ? 'aspect-video' : '';
+  const resolvedSrc = src && width ? cloudinaryResize(src, width) : src;
+
+  return (
+    <div className={cn('relative overflow-hidden bg-muted', aspectClass, className)}>
+      {!showFallback && (
+        <img
+          src={resolvedSrc}
+          alt={alt}
+          loading="lazy"
+          decoding="async"
+          className={cn(
+            'h-full w-full object-cover transition-opacity duration-500',
+            loaded ? 'opacity-100' : 'opacity-0'
+          )}
+          onLoad={() => setLoaded(true)}
+          onError={() => setErrored(true)}
+          {...rest}
+        />
+      )}
+      {showFallback && (
+        <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+          {fallbackIcon ?? <Package className="h-8 w-8" />}
+        </div>
+      )}
+      {!showFallback && !loaded && (
+        <div className="absolute inset-0 animate-pulse bg-muted" />
+      )}
+    </div>
+  );
+}
